@@ -1,0 +1,11 @@
+[MASTER]
+ignore=.git,tests
+
+[MESSAGES CONTROL]
+disable=
+# "E" Error for important programming issues (likely bugs)
+# "W" Warnings for stylistic problems or minor programming issues
+# "C" Coding convention violations
+ missing-docstring,
+# "R" Refactor recommendations
+ too-many-arguments
