@@ -14,6 +14,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import sys
 from freezegun import freeze_time
 from dciauth import signature
 
@@ -66,6 +67,14 @@ def test_signature_not_equals():
         "74816a5237d72280aa327ed345267b4c31ee9f7dad0686e14940918c34a5533a",
         "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     ) is False
+
+
+def test_string_without_buffer_interface():
+    if sys.version_info[0] == 2:
+        assert signature.equals(
+            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
+            unicode('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
+        )
 
 
 def test_create_string_to_sign():

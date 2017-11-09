@@ -98,7 +98,10 @@ def generate_headers_with_secret(secret, method, content_type, url, params, payl
 
 
 def equals(client_signature, header_signature):
-    return hmac.compare_digest(client_signature, header_signature)
+    return hmac.compare_digest(
+        client_signature.encode('utf-8'),
+        header_signature.encode('utf-8')
+    )
 
 
 def is_expired(headers):
