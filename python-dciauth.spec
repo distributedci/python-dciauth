@@ -6,7 +6,7 @@
 %endif
 
 Name:           python-dciauth
-Version:        0.1.1
+Version:        0.1.2
 Release:        1%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
@@ -63,6 +63,9 @@ Summary: %{summary}
 %{python3_sitelib}/dciauth/*
 
 %changelog
+* Mon Nov 13 2017 Guillaume Vincent <gvincent@redhat.com> 0.1.2-1
+- dummy patch
+
 * Mon Nov 9 2017 Guillaume Vincent <gvincent@redhat.com> 0.1.1-1
 - Fix signatures comparison on python 2
 
