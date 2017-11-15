@@ -31,7 +31,7 @@ def get_jobs():
         method=request.method,
         headers=headers,
         url=request.path,
-        query_string=request.query_string.decode('utf-8'),
+        params=request.args.to_dict(flat=True),
         payload=request.get_json(silent=True)
     )
     dci_signature = signature.get_signature_from_headers(headers)

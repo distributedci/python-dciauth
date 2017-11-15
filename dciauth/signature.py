@@ -49,10 +49,11 @@ def _sign(secret, string_to_sign):
         hashlib.sha256).hexdigest()
 
 
-def calculate_signature(secret, method, headers, url, query_string, payload):
+def calculate_signature(secret, method, headers, url, params, payload):
     hashed_payload = _hash_payload(payload)
     timestamp = headers.get(DCI_DATETIME_HEADER, '')
     content_type = headers.get('Content-type', '')
+    query_string = _get_sorted_query_string(params)
     string_to_sign = _create_string_to_sign(
         method,
         content_type,

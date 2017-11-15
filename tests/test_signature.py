@@ -110,7 +110,7 @@ def test_calculate_signature():
         'Content-type': 'application/json'
     }
     url = "/api/v1/jobs"
-    query_string = "limit=100&offset=1"
+    params = {'limit': 100, 'offset': 1}
     payload = {}
     expected_signature = "811f7ceb089872cd264fc5859cffcd6ddfbe8ce851f0743199ad4c96470c6b6b"
     assert signature.calculate_signature(
@@ -118,7 +118,27 @@ def test_calculate_signature():
         method,
         headers,
         url,
-        query_string,
+        params,
+        payload) == expected_signature
+
+
+def test_calculate_signature_params_order_doesnt_is_not_important():
+    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
+    method = "GET"
+    headers = {
+        'DCI-Datetime': '20171103T162727Z',
+        'Content-type': 'application/json'
+    }
+    url = "/api/v1/jobs"
+    params = {'offset': 1, 'limit': 100}
+    payload = {}
+    expected_signature = "811f7ceb089872cd264fc5859cffcd6ddfbe8ce851f0743199ad4c96470c6b6b"
+    assert signature.calculate_signature(
+        secret,
+        method,
+        headers,
+        url,
+        params,
         payload) == expected_signature
 
 
