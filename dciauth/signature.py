@@ -31,6 +31,7 @@ DCI_DATETIME_HEADER = 'DCI-Datetime'
 
 def _hash_payload(payload):
     if payload:
+        payload = dict(sorted(payload.items(), key=lambda val: val[0]))
         string_payload = json.dumps(payload)
     else:
         string_payload = ''

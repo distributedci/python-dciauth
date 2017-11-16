@@ -37,6 +37,10 @@ def test_hash_payload_for_get_request_is_empty_string():
     assert signature._hash_payload(payload) == expected_hash
 
 
+def test_hash_payload_order_is_not_important():
+    assert signature._hash_payload({'a': 1, 'b': 2}) == signature._hash_payload({'b': 2, 'a': 1})
+
+
 @freeze_time("20171103T162727Z")
 def test_not_a_replay_request():
     one_minute_ago = '20171103T162627Z'
@@ -122,7 +126,7 @@ def test_calculate_signature():
         payload) == expected_signature
 
 
-def test_calculate_signature_params_order_doesnt_is_not_important():
+def test_calculate_signature_params_order_is_not_important():
     secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
     method = "GET"
     headers = {
@@ -190,3 +194,28 @@ def test_generate_headers_with_secret():
         payload)
     for key in expected_headers.keys():
         assert expected_headers[key] == headers[key]
+
+
+def test_calculate_signature_payload_order_is_not_important():
+    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
+    method = "POST"
+    headers = {
+        'DCI-Datetime': '20171103T162727Z',
+        'Content-type': 'application/json'
+    }
+    url = "/api/v1/jobs"
+    s1 = signature.calculate_signature(
+        secret,
+        method,
+        headers,
+        url,
+        {},
+        {'a': 1, 'b': 2})
+    s2 = signature.calculate_signature(
+        secret,
+        method,
+        headers,
+        url,
+        {},
+        {'b': 2, 'a': 1})
+    assert signature.equals(s1, s2)
