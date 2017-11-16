@@ -18,6 +18,7 @@ import datetime
 import hashlib
 import hmac
 import json
+from collections import OrderedDict
 
 try:
     from urllib import urlencode
@@ -31,6 +32,7 @@ DCI_DATETIME_HEADER = 'DCI-Datetime'
 
 def _hash_payload(payload):
     if payload:
+        payload = OrderedDict(sorted(payload.items(), key=lambda k: k[0]))
         string_payload = json.dumps(payload)
     else:
         string_payload = ''
@@ -73,7 +75,7 @@ def get_signature_from_headers(headers):
 
 
 def _get_sorted_query_string(params):
-    sorted_params = sorted(params.items(), key=lambda val: val[0])
+    sorted_params = OrderedDict(sorted(params.items(), key=lambda k: k[0]))
     return urlencode(sorted_params)
 
 
