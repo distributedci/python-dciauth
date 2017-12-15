@@ -14,74 +14,49 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import os
 import requests
 
-from dciauth import signature
+from dciauth.signature import Signature
+from dciauth.request import AuthRequest
 
-secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
-
-method = "GET"
-content_type = 'application/json'
-url = "/api/v1/jobs"
+endpoint = '/api/v1/jobs'
 params = {'limit': 100, 'offset': 1}
-payload = {}
-headers = signature.generate_headers_with_secret(
-    secret,
-    method,
-    content_type,
-    url,
-    params,
-    payload)
-r = requests.get('http://127.0.0.1:5000%s' % url, params=params, headers=headers)
+auth_request = AuthRequest(endpoint=endpoint, params=params)
+secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
+headers = Signature(request=auth_request).generate_headers('remoteci', 'client_id', secret)
+r = requests.get('http://127.0.0.1:5000%s' % endpoint, params=params, headers=headers)
 print(headers)
 print(r.status_code)
 print(r.text)
 print(r.url)
+assert r.status_code == 200
 
-params = {"foo": "I ❤ bar"}
-headers = signature.generate_headers_with_secret(
-    secret,
-    method,
-    content_type,
-    url,
-    params,
-    payload)
-r = requests.get('http://127.0.0.1:5000%s' % url, params=params, headers=headers)
+params = {"limit": 100}
+auth_request = AuthRequest(endpoint=endpoint, params=params)
+headers = Signature(request=auth_request).generate_headers('remoteci', 'client_id', secret)
+r = requests.get('http://127.0.0.1:5000%s' % endpoint, params=params, headers=headers)
 print(headers)
 print(r.status_code)
 print(r.url)
+assert r.status_code == 200
 
-method = "POST"
-content_type = 'application/json'
-url = "/api/v1/jobs"
 payload = {"bar": "I'm ❤ bar"}
-params = {"heart": "❤"}
-headers = signature.generate_headers_with_secret(
-    secret,
-    method,
-    content_type,
-    url,
-    params,
-    payload)
-r = requests.post('http://127.0.0.1:5000%s' % url, params=params, headers=headers, json=payload)
+auth_request = AuthRequest(method="POST", endpoint=endpoint, payload=payload,
+                           headers={'content_type': 'application/json'})
+headers = Signature(request=auth_request).generate_headers('remoteci', 'client_id', secret)
+r = requests.post('http://127.0.0.1:5000%s' % endpoint, params=params, headers=headers, json=payload)
 print(headers)
 print(r.status_code)
 print(r.url)
+assert r.status_code == 200
 
-method = "POST"
-content_type = 'application/json'
-url = "/api/v1/jobs"
-payload = {}
-params = {}
-headers = signature.generate_headers_with_secret(
-    secret,
-    method,
-    content_type,
-    url,
-    params,
-    payload)
-files = {'file': open('test.txt', 'rb')}
-r = requests.post('http://127.0.0.1:5000%s' % url, headers=headers, files=files)
+auth_request = AuthRequest(method="POST", endpoint=endpoint, headers={'content_type': 'application/json'})
+headers = Signature(request=auth_request).generate_headers('remoteci', 'client_id', secret)
+file_path = os.path.join(os.path.dirname(__file__), 'test.txt')
+files = {'file': open(file_path, 'rb')}
+r = requests.post('http://127.0.0.1:5000%s' % endpoint, headers=headers, files=files)
 print(headers)
 print(r.status_code)
 print(r.url)
+assert r.status_code == 200

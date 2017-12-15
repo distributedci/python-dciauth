@@ -14,208 +14,132 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import sys
-from freezegun import freeze_time
-from dciauth import signature
+import datetime
+from dciauth.request import AuthRequest
+from dciauth.signature import Signature
 
 
-def test_hash_payload():
-    payload = {"foo": "bar"}
-    expected_hash = "426fc04f04bf8fdb5831dc37bbb6dcf70f63a37e05a68c6ea5f63e85ae579376"
-    assert signature._hash_payload(payload) == expected_hash
+def test_can_create_signature():
+    request = AuthRequest()
+    signature = Signature(request=request)
+    assert signature.request.method == 'GET'
 
 
-def test_hash_payload_unicode():
-    payload = {"foo": "I ❤ bar"}
-    expected_hash = "74816a5237d72280aa327ed345267b4c31ee9f7dad0686e14940918c34a5533a"
-    assert signature._hash_payload(payload) == expected_hash
+def test_signature_calc_dci_datetime_and_date_with_good_format():
+    request = AuthRequest()
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    assert signature.dci_date == '20171215'
+    assert signature.dci_datetime == '20171215T111929Z'
 
 
-def test_hash_payload_for_get_request_is_empty_string():
-    payload = None
-    expected_hash = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    assert signature._hash_payload(payload) == expected_hash
+def test_2_signatures_now_is_different_if_not_defined():
+    signature = Signature(request=AuthRequest())
+    signature2 = Signature(request=AuthRequest())
+    assert signature.now.strftime('%Y%m%dT%H%M%S.%fZ') != signature2.now.strftime('%Y%m%dT%H%M%S.%fZ')
 
 
-def test_hash_payload_order_is_not_important():
-    assert signature._hash_payload({'a': 1, 'b': 2}) == signature._hash_payload({'b': 2, 'a': 1})
+def test_create_canonical_request():
+    request = AuthRequest(endpoint='/api/v1/jobs')
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    canonical_request = signature._create_canonical_request()
+    expected_canonical_request = """GET
+/api/v1/jobs
 
 
-@freeze_time("20171103T162727Z")
-def test_not_a_replay_request():
-    one_minute_ago = '20171103T162627Z'
-    headers = {
-        'DCI-Datetime': one_minute_ago
-    }
-    assert signature.is_expired(headers) is False
+
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"""
+    assert expected_canonical_request == canonical_request
 
 
-@freeze_time("20171103T162727Z")
-def test_five_minutes_after_is_a_replay_request():
-    more_thant_five_minute_ago = '20171103T162226Z'
-    headers = {
-        'DCI-Datetime': more_thant_five_minute_ago
-    }
-    assert signature.is_expired(headers)
-
-
-def test_signature_equals():
-    assert signature.equals(
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+def test_create_canonical_request_with_params():
+    request = AuthRequest(
+        method='GET',
+        endpoint='/api/v1/jobs',
+        params={'embed': 'teams', 'limit': '50'},
+        headers={'dci-datetime': '20171215T111929Z'}
     )
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    canonical_request = signature._create_canonical_request()
+    expected_canonical_request = """GET
+/api/v1/jobs
+embed=teams&limit=50
+dci-datetime:20171215T111929Z
+
+dci-datetime
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"""
+    assert expected_canonical_request == canonical_request
 
 
-def test_signature_not_equals():
-    assert signature.equals(
-        "74816a5237d72280aa327ed345267b4c31ee9f7dad0686e14940918c34a5533a",
-        "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-    ) is False
+def test_create_canonical_request_post():
+    request = AuthRequest(
+        method='POST',
+        endpoint='/api/v1/users',
+        payload={'name': 'u'},
+        headers={'content-type': 'application/json', 'dci-datetime': '20171215T111929Z'}
+    )
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    canonical_request = signature._create_canonical_request()
+    expected_canonical_request = """POST
+/api/v1/users
 
+content-type:application/json
+dci-datetime:20171215T111929Z
 
-def test_string_without_buffer_interface():
-    if sys.version_info[0] == 2:
-        assert signature.equals(
-            'e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855',
-            unicode('e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855')
-        )
+content-type;dci-datetime
+0a8ed5c97edb6664928d54d4c5adbb92a9992fe5b78c9a10016824fee1cdb230"""
+    assert expected_canonical_request == canonical_request
 
 
 def test_create_string_to_sign():
-    method = "GET"
-    content_type = "application/json"
-    timestamp = "20171103T162727Z"
-    url = "/api/v1/jobs"
-    query_string = "limit=100&offset=1"
-    hashed_payload = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
-
-    string_to_sign = signature._create_string_to_sign(
-        method,
-        content_type,
-        timestamp,
-        url,
-        query_string,
-        hashed_payload,
-    )
-
-    assert string_to_sign == '''GET
-application/json
-20171103T162727Z
-/api/v1/jobs
-limit=100&offset=1
-e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855'''
+    request = AuthRequest(endpoint='/api/v1/jobs', headers={'dci-datetime': '20171215T111929Z'})
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    string_to_sign = signature._create_string_to_sign()
+    expected_string_to_sign = """DCI-HMAC-SHA256
+20171215T111929Z
+20171215
+6cff96f139f2517692f4dfc7e3396b947112908750b1d894e087a59649a4b3a7"""
+    assert expected_string_to_sign == string_to_sign
 
 
-def test_calculate_signature():
-    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
-    method = "GET"
-    headers = {
-        'DCI-Datetime': '20171103T162727Z',
-        'Content-type': 'application/json'
-    }
-    url = "/api/v1/jobs"
-    params = {'limit': 100, 'offset': 1}
-    payload = {}
-    expected_signature = "811f7ceb089872cd264fc5859cffcd6ddfbe8ce851f0743199ad4c96470c6b6b"
-    assert signature.calculate_signature(
-        secret,
-        method,
-        headers,
-        url,
-        params,
-        payload) == expected_signature
+def test_sign():
+    request = AuthRequest(endpoint='/api/v1/jobs', headers={'dci-datetime': '20171215T111929Z'})
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    expected_signature = 'bfbe2596b3e4dfbc08ff7523d26afc883125e08a522674be063cc44a152ce2b6'
+    assert expected_signature == signature._sign('secret')
 
 
-def test_calculate_signature_params_order_is_not_important():
-    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
-    method = "GET"
-    headers = {
-        'DCI-Datetime': '20171103T162727Z',
-        'Content-type': 'application/json'
-    }
-    url = "/api/v1/jobs"
-    params = {'offset': 1, 'limit': 100}
-    payload = {}
-    expected_signature = "811f7ceb089872cd264fc5859cffcd6ddfbe8ce851f0743199ad4c96470c6b6b"
-    assert signature.calculate_signature(
-        secret,
-        method,
-        headers,
-        url,
-        params,
-        payload) == expected_signature
-
-
-def test_get_signature_from_headers():
-    headers = {
-        'Authorization': 'DCI-HMAC-SHA256 811f7ceb089872cd264fc5859cffcd6ddfbe8ce851f0743199ad4c96470c6b6b'
-    }
-    expected_signature = "811f7ceb089872cd264fc5859cffcd6ddfbe8ce851f0743199ad4c96470c6b6b"
-    assert signature.get_signature_from_headers(headers) == expected_signature
-
-
-def test_get_signature_from_headers_return_empty_string_if_no_auth():
-    assert signature.get_signature_from_headers({}) == ''
-
-
-def test_get_signature_from_headers_return_empty_string_if_auth_not_dci_hmac():
-    headers = {
-        'Authorization': 'Basic QWxhZGRpbjpPcGVuU2VzYW1l'
-    }
-    assert signature.get_signature_from_headers(headers) == ''
-
-
-def test_get_ordered_query_string():
-    params = {'limit': 100, 'offset': 1}
-    expected_query_string = "limit=100&offset=1"
-    query_string = signature._get_sorted_query_string(params)
-    assert expected_query_string == query_string
-
-
-@freeze_time("20171103T162727Z")
-def test_generate_headers_with_secret():
-    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
-    method = "GET"
-    content_type = 'application/json'
-    url = "/api/v1/jobs"
-    params = {'limit': 100, 'offset': 1}
-    payload = {}
+def test_generate_headers():
+    request = AuthRequest(endpoint='/api/v1/jobs')
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    headers = signature.generate_headers(client_type='remoteci', client_id='abcdef', secret='secret')
     expected_headers = {
-        'Authorization': 'DCI-HMAC-SHA256 811f7ceb089872cd264fc5859cffcd6ddfbe8ce851f0743199ad4c96470c6b6b',
-        'Content-Type': 'application/json',
-        'DCI-Datetime': '20171103T162727Z'
+        'Authorization': 'DCI-HMAC-SHA256 Credential=remoteci/abcdef, SignedHeaders=dci-datetime, Signature=bfbe2596b3e4dfbc08ff7523d26afc883125e08a522674be063cc44a152ce2b6,',
+        'dci-datetime': '20171215T111929Z'
     }
-    headers = signature.generate_headers_with_secret(
-        secret,
-        method,
-        content_type,
-        url,
-        params,
-        payload)
     for key in expected_headers.keys():
         assert expected_headers[key] == headers[key]
 
 
-def test_calculate_signature_payload_order_is_not_important():
-    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
-    method = "POST"
-    headers = {
-        'DCI-Datetime': '20171103T162727Z',
-        'Content-type': 'application/json'
+def test_generate_headers_post():
+    request = AuthRequest(
+        method='POST',
+        endpoint='/api/v1/users',
+        payload={'name': 'u'},
+        headers={'content-type': 'application/json'}
+    )
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    headers = signature.generate_headers(client_type='feeder', client_id='abcdef', secret='secret')
+    expected_headers = {
+        'Authorization': 'DCI-HMAC-SHA256 Credential=feeder/abcdef, SignedHeaders=content-type;dci-datetime, Signature=d6448fc3a067570527cee42370611736c861853dbc09ff74e9bc0abf14d5f65e,',
+        'dci-datetime': '20171215T111929Z'
     }
-    url = "/api/v1/jobs"
-    s1 = signature.calculate_signature(
-        secret,
-        method,
-        headers,
-        url,
-        {},
-        {'a': 1, 'b': 2})
-    s2 = signature.calculate_signature(
-        secret,
-        method,
-        headers,
-        url,
-        {},
-        {'b': 2, 'a': 1})
-    assert signature.equals(s1, s2)
+    for key in expected_headers.keys():
+        assert expected_headers[key] == headers[key]
