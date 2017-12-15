@@ -6,7 +6,7 @@
 %endif
 
 Name:           python-dciauth
-Version:        1.0.1
+Version:        2.0.0
 Release:        1%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
@@ -63,6 +63,9 @@ Summary: %{summary}
 %{python3_sitelib}/dciauth/*
 
 %changelog
+* Mon Dec 18 2017 Guillaume Vincent <gvincent@redhat.com> 2.0.0-1
+- Revamp signature mechanism and copy AWS HMAC version 4 mechanism
+
 * Mon Nov 16 2017 Guillaume Vincent <gvincent@redhat.com> 1.0.1-1
 - Fix error in payload order
 

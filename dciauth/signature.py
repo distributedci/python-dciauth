@@ -17,100 +17,87 @@
 import datetime
 import hashlib
 import hmac
-import json
-from collections import OrderedDict
-
-try:
-    from urllib import urlencode
-except ImportError:
-    from urllib.parse import urlencode
-
-DATETIME_FORMAT = '%Y%m%dT%H%M%SZ'
-DCI_ALGORITHM = 'DCI-HMAC-SHA256'
-DCI_DATETIME_HEADER = 'DCI-Datetime'
 
 
-def _hash_payload(payload):
-    if payload:
-        payload = OrderedDict(sorted(payload.items(), key=lambda k: k[0]))
-        string_payload = json.dumps(payload)
-    else:
-        string_payload = ''
-    return hashlib.sha256(string_payload.encode('utf-8')).hexdigest()
+class Signature(object):
+    def __init__(self, request, now=None):
+        """
+        dciauth Signature object implementing AWS HMAC version 4 mechanism.
 
+        :param request (AuthRequest): dciauth AuthRequest object
+        :param now (datetime): datetime used in Signature algorithm (default: datetime.utcnow())
+        """
 
-def _create_string_to_sign(method, content_type, timestamp, url, query_string, hashed_payload):
-    elements = (method, content_type, timestamp, url, query_string, hashed_payload,)
-    return '\n'.join(elements)
+        self.request = request
+        self.now = now or datetime.datetime.utcnow()
+        self.dci_date = self.now.strftime('%Y%m%d')
+        self.dci_datetime_format = '%Y%m%dT%H%M%SZ'
+        self.dci_datetime = self.now.strftime(self.dci_datetime_format)
+        self.dci_datetime_header = 'dci-datetime'
 
+    def generate_headers(self, client_type, client_id, secret):
+        """
+        generate_headers is used to generate the headers automatically for your http request
 
-def _sign(secret, string_to_sign):
-    return hmac.new(
-        secret.encode('utf-8'),
-        string_to_sign.encode('utf-8'),
-        hashlib.sha256).hexdigest()
+        :param client_type (str): remoteci or feeder
+        :param client_id (str): remoteci or feeder id
+        :param secret (str): api secret
+        :return: Authorization headers (dict)
+        """
 
+        self.request.add_header(self.dci_datetime_header, self.dci_datetime)
+        signature = self._sign(secret)
+        return self.request.build_headers(client_type, client_id, signature)
 
-def calculate_signature(secret, method, headers, url, params, payload):
-    hashed_payload = _hash_payload(payload)
-    timestamp = headers.get(DCI_DATETIME_HEADER, '')
-    content_type = headers.get('Content-type', '')
-    query_string = _get_sorted_query_string(params)
-    string_to_sign = _create_string_to_sign(
-        method,
-        content_type,
-        timestamp,
-        url,
-        query_string,
-        hashed_payload,
-    )
-    return _sign(secret, string_to_sign)
+    def is_valid(self, secret):
+        signature = self._sign(secret)
+        client_signature = self.request.get_client_info()['signature']
+        return self._equals(signature, client_signature)
 
+    def is_expired(self):
+        timestamp = self.request.headers.get(self.dci_datetime_header)
+        if timestamp:
+            timestamp = datetime.datetime.strptime(timestamp, self.dci_datetime_format)
+            return abs(self.now - timestamp) > datetime.timedelta(days=1)
+        return False
 
-def get_signature_from_headers(headers):
-    authorization_header = headers.get('Authorization', '')
-    if DCI_ALGORITHM in authorization_header:
-        return authorization_header.split(' ')[1]
-    return ''
+    def _create_canonical_request(self):
+        payload_hash = hashlib.sha256(self.request.get_payload_string().encode('utf-8')).hexdigest()
+        return """{method}
+{endpoint}
+{query_string}
+{headers_string}
+{signed_headers}
+{payload_hash}""".format(method=self.request.method,
+                         endpoint=self.request.endpoint,
+                         query_string=self.request.get_query_string(),
+                         headers_string=self.request.get_headers_string(),
+                         signed_headers=self.request.get_signed_headers_string(),
+                         payload_hash=payload_hash)
 
+    def _create_string_to_sign(self):
+        canonical_request = self._create_canonical_request()
+        canonical_request_hash = hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
+        return """{dci_algorithm}
+{dci_datetime}
+{dci_date}
+{canonical_request_hash}""".format(dci_algorithm=self.request.algorithm,
+                                   dci_datetime=self.dci_datetime,
+                                   dci_date=self.dci_date,
+                                   canonical_request_hash=canonical_request_hash)
 
-def _get_sorted_query_string(params):
-    sorted_params = OrderedDict(sorted(params.items(), key=lambda k: k[0]))
-    return urlencode(sorted_params)
+    def _sign(self, secret):
+        string_to_sign = self._create_string_to_sign()
+        signing_key = hmac.new(
+            secret.encode('utf-8'),
+            self.dci_date.encode('utf-8'),
+            hashlib.sha256
+        ).digest()
+        return hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
 
-
-def generate_headers_with_secret(secret, method, content_type, url, params, payload):
-    hashed_payload = _hash_payload(payload)
-    now = datetime.datetime.utcnow()
-    dci_datetime = now.strftime(DATETIME_FORMAT)
-    query_string = _get_sorted_query_string(params)
-    string_to_sign = _create_string_to_sign(
-        method,
-        content_type,
-        dci_datetime,
-        url,
-        query_string,
-        hashed_payload,
-    )
-    signature = _sign(secret, string_to_sign)
-    return {
-        'Authorization': '%s %s' % (DCI_ALGORITHM, signature),
-        'Content-Type': content_type,
-        DCI_DATETIME_HEADER: dci_datetime
-    }
-
-
-def equals(client_signature, header_signature):
-    return hmac.compare_digest(
-        client_signature.encode('utf-8'),
-        header_signature.encode('utf-8')
-    )
-
-
-def is_expired(headers):
-    timestamp = headers.get(DCI_DATETIME_HEADER, '')
-    if timestamp:
-        now = datetime.datetime.utcnow()
-        timestamp = datetime.datetime.strptime(timestamp, DATETIME_FORMAT)
-        return abs(now - timestamp) > datetime.timedelta(minutes=5)
-    return False
+    @staticmethod
+    def _equals(client_signature, header_signature):
+        return hmac.compare_digest(
+            client_signature.encode('utf-8'),
+            header_signature.encode('utf-8')
+        )
