@@ -17,28 +17,25 @@
 from flask import Flask
 from flask import request
 from flask import jsonify
-from dciauth import signature
+from dciauth.signature import Signature
+from dciauth.request import AuthRequest
 
 app = Flask(__name__)
 
 
 @app.route("/api/v1/jobs", methods=['GET', 'POST'])
 def get_jobs():
-    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
-    headers = request.headers
-    expected_signature = signature.calculate_signature(
-        secret,
+    auth_request = AuthRequest(
         method=request.method,
-        headers=headers,
-        url=request.path,
-        params=request.args.to_dict(flat=True),
-        payload=request.get_json(silent=True)
+        endpoint=request.path,
+        payload=request.get_json(silent=True),
+        headers=request.headers,
+        params=request.args.to_dict(flat=True)
     )
-    dci_signature = signature.get_signature_from_headers(headers)
-
-    if signature.equals(expected_signature, dci_signature):
+    signature = Signature(request=auth_request)
+    secret = "Y4efRHLzw2bC2deAZNZvxeeVvI46Cx8XaLYm47Dc019S6bHKejSBVJiGAfHbZLIN"
+    if signature.is_valid(secret):
         raise Exception("Authentication failed: signature invalid")
-
-    if signature.is_expired(headers):
+    if signature.is_expired():
         raise Exception("Authentication failed: signature expired")
     return jsonify({'jobs': []})
