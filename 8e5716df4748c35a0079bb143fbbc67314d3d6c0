@@ -1,0 +1,27 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "fa0d59b9_5092e458",
+        "filename": "dciauth/request.py",
+        "patchSetId": 5
+      },
+      "lineNbr": 11,
+      "author": {
+        "id": 28
+      },
+      "writtenOn": "2017-12-20T14:31:36Z",
+      "side": 1,
+      "message": "I\u0027d like to find another name for \u0027payload\u0027 as it does not describe precisely enough that it shoud be a Python dict that should be serializable into JSON.\n\nWhat would you think about naming it \u0027json\u0027 instead, as done in python-requests ?",
+      "range": {
+        "startLine": 11,
+        "startChar": 51,
+        "endLine": 11,
+        "endChar": 63
+      },
+      "revId": "8e5716df4748c35a0079bb143fbbc67314d3d6c0",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
