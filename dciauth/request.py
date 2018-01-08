@@ -6,6 +6,8 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
+ALGORITHM = 'DCI-HMAC-SHA256'
+
 
 class AuthRequest(object):
     def __init__(self, method='GET', endpoint='/', payload=None, headers=None, params=None):
@@ -19,11 +21,11 @@ class AuthRequest(object):
         :param params (dict): url parameters (default: {})
         """
 
-        self.algorithm = 'DCI-HMAC-SHA256'
+        self.algorithm = ALGORITHM
         self.method = method.upper()
         self.endpoint = endpoint
         self.payload = payload or {}
-        self.headers = headers or {}
+        self.headers = self._lower(headers or {})
         self.filtered_headers = self._filter_headers(self.headers)
         self.params = params or {}
 
@@ -31,7 +33,7 @@ class AuthRequest(object):
         auth_string_format = ("{dci_algorithm} Credential={client_type}/{client_id}, "
                               "SignedHeaders={signed_headers}, Signature={signature},")
         headers = self.headers.copy()
-        headers['Authorization'] = auth_string_format.format(
+        headers['authorization'] = auth_string_format.format(
             dci_algorithm=self.algorithm,
             client_type=client_type,
             client_id=client_id,
@@ -50,7 +52,7 @@ class AuthRequest(object):
 
     def get_signed_headers_string(self):
         headers = self._order_dict(self.filtered_headers).keys()
-        return ';'.join([header.lower() for header in headers])
+        return ';'.join(headers)
 
     def get_query_string(self):
         return urlencode(self._order_dict(self.params))
@@ -61,7 +63,7 @@ class AuthRequest(object):
         return ''
 
     def get_client_info(self):
-        authorization_header = self.headers.get('Authorization')
+        authorization_header = self.headers.get('authorization')
         info = {}
         if authorization_header:
             credentials = self.find_between(authorization_header, 'Credential=', ',').split('/')
@@ -80,16 +82,16 @@ class AuthRequest(object):
             return ""
 
     @staticmethod
+    def _lower(headers):
+        return {key.lower(): value for key, value in headers.items()}
+
+    @staticmethod
     def _order_dict(dictionary):
         return OrderedDict(sorted(dictionary.items(), key=lambda k: k[0]))
 
     def _filter_headers(self, headers):
-        authorization_header = headers.get('Authorization')
+        authorization_header = headers.get('authorization')
         if not authorization_header:
             return headers
         signed_headers = self.find_between(authorization_header, 'SignedHeaders=', ',').split(';')
-        filtered_headers = {}
-        for key, value in headers.items():
-            if key.lower() in signed_headers:
-                filtered_headers[key.lower()] = value
-        return filtered_headers
+        return {key: value for key, value in headers.items() if key in signed_headers}

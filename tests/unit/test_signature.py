@@ -73,6 +73,26 @@ e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"""
     assert expected_canonical_request == canonical_request
 
 
+def test_create_canonical_request_with_uppercase_headers():
+    request = AuthRequest(
+        method='GET',
+        endpoint='/api/v1/jobs',
+        params={'embed': 'teams', 'limit': '50'},
+        headers={'DCI-Datetime': '20171215T111929Z'}
+    )
+    now = datetime.datetime(2017, 12, 15, 11, 19, 29)
+    signature = Signature(request=request, now=now)
+    canonical_request = signature._create_canonical_request()
+    expected_canonical_request = """GET
+/api/v1/jobs
+embed=teams&limit=50
+dci-datetime:20171215T111929Z
+
+dci-datetime
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"""
+    assert expected_canonical_request == canonical_request
+
+
 def test_create_canonical_request_post():
     request = AuthRequest(
         method='POST',
@@ -120,7 +140,7 @@ def test_generate_headers():
     signature = Signature(request=request, now=now)
     headers = signature.generate_headers(client_type='remoteci', client_id='abcdef', secret='secret')
     expected_headers = {
-        'Authorization': 'DCI-HMAC-SHA256 Credential=remoteci/abcdef, SignedHeaders=dci-datetime, Signature=bfbe2596b3e4dfbc08ff7523d26afc883125e08a522674be063cc44a152ce2b6,',
+        'authorization': 'DCI-HMAC-SHA256 Credential=remoteci/abcdef, SignedHeaders=dci-datetime, Signature=bfbe2596b3e4dfbc08ff7523d26afc883125e08a522674be063cc44a152ce2b6,',
         'dci-datetime': '20171215T111929Z'
     }
     for key in expected_headers.keys():
@@ -138,7 +158,7 @@ def test_generate_headers_post():
     signature = Signature(request=request, now=now)
     headers = signature.generate_headers(client_type='feeder', client_id='abcdef', secret='secret')
     expected_headers = {
-        'Authorization': 'DCI-HMAC-SHA256 Credential=feeder/abcdef, SignedHeaders=content-type;dci-datetime, Signature=d6448fc3a067570527cee42370611736c861853dbc09ff74e9bc0abf14d5f65e,',
+        'authorization': 'DCI-HMAC-SHA256 Credential=feeder/abcdef, SignedHeaders=content-type;dci-datetime, Signature=d6448fc3a067570527cee42370611736c861853dbc09ff74e9bc0abf14d5f65e,',
         'dci-datetime': '20171215T111929Z'
     }
     for key in expected_headers.keys():
