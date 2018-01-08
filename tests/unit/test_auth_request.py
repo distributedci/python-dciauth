@@ -42,6 +42,13 @@ def test_can_create_auth_request_with_constructor():
     assert request.params == {'limit': 100}
 
 
+def test_auth_request_lowercase_header_key():
+    request = AuthRequest(
+        headers={'Content-Type': 'application/json'},
+    )
+    assert request.headers == {'content-type': 'application/json'}
+
+
 def test_auth_request_get_query_string():
     query_string = AuthRequest(params={'a': 1, 'b': 2}).get_query_string()
     assert query_string == 'a=1&b=2'
@@ -103,13 +110,6 @@ def test_request_get_signed_headers_based_on_filtered_headers():
     assert signed_headers == 'content-type'
 
 
-def test_request_get_signed_headers_string_are_lowercase():
-    request = AuthRequest(headers={'Content-Type': 'application/json'})
-    request.filtered_headers = {'Content-Type': 'application/json'}
-    signed_headers = request.get_signed_headers_string()
-    assert signed_headers == 'content-type'
-
-
 def test_request_get_signed_headers_empty_headers():
     signed_headers = AuthRequest().get_signed_headers_string()
     assert signed_headers == ''
@@ -128,7 +128,7 @@ def test_build_headers():
     request.add_header('dci-datetime', '20171215T111929Z')
     headers = request.build_headers(client_type='remoteci', client_id='abc', signature='123')
     expected_headers = {
-        'Authorization': 'DCI-HMAC-SHA256 Credential=remoteci/abc, SignedHeaders=content-type;dci-datetime, Signature=123,',
+        'authorization': 'DCI-HMAC-SHA256 Credential=remoteci/abc, SignedHeaders=content-type;dci-datetime, Signature=123,',
         'dci-datetime': '20171215T111929Z',
         'content-type': 'application/json'
     }
@@ -138,7 +138,6 @@ def test_build_headers():
 
 def test_request_get_client_info():
     headers = AuthRequest().build_headers(client_type='remoteci', client_id='abc', signature='123')
-    print(headers)
     client_info = AuthRequest(headers=headers).get_client_info()
     assert client_info['client_type'] == 'remoteci'
     assert client_info['client_id'] == 'abc'
