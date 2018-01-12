@@ -42,7 +42,7 @@ class AuthRequest(object):
         return headers
 
     def add_header(self, key, value):
-        self.headers[key] = value
+        self.headers[key.lower()] = value
 
     def get_headers_string(self):
         headers_string = ''

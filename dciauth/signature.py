@@ -30,9 +30,10 @@ class Signature(object):
 
         self.request = request
         self.now = now or datetime.datetime.utcnow()
-        self.dci_date = self.now.strftime('%Y%m%d')
+        self.dci_date_format = '%Y%m%d'
+        self.dci_date_str = self.now.strftime(self.dci_date_format)
         self.dci_datetime_format = '%Y%m%dT%H%M%SZ'
-        self.dci_datetime = self.now.strftime(self.dci_datetime_format)
+        self.dci_datetime_str = self.now.strftime(self.dci_datetime_format)
         self.dci_datetime_header = 'dci-datetime'
 
     def generate_headers(self, client_type, client_id, secret):
@@ -45,20 +46,22 @@ class Signature(object):
         :return: Authorization headers (dict)
         """
 
-        self.request.add_header(self.dci_datetime_header, self.dci_datetime)
+        self.request.add_header(self.dci_datetime_header, self.dci_datetime_str)
         signature = self._sign(secret)
         return self.request.build_headers(client_type, client_id, signature)
 
     def is_valid(self, secret):
+        dci_datetime_str = self.request.headers[self.dci_datetime_header]
+        self._update_dci_dates(dci_datetime_str)
         signature = self._sign(secret)
         client_signature = self.request.get_client_info()['signature']
         return self._equals(signature, client_signature)
 
-    def is_expired(self):
+    def is_expired(self, hours=24):
         timestamp = self.request.headers.get(self.dci_datetime_header)
         if timestamp:
             timestamp = datetime.datetime.strptime(timestamp, self.dci_datetime_format)
-            return abs(self.now - timestamp) > datetime.timedelta(days=1)
+            return abs(self.now - timestamp) > datetime.timedelta(hours=hours)
         return False
 
     def _create_canonical_request(self):
@@ -82,15 +85,15 @@ class Signature(object):
 {dci_datetime}
 {dci_date}
 {canonical_request_hash}""".format(dci_algorithm=self.request.algorithm,
-                                   dci_datetime=self.dci_datetime,
-                                   dci_date=self.dci_date,
+                                   dci_datetime=self.dci_datetime_str,
+                                   dci_date=self.dci_date_str,
                                    canonical_request_hash=canonical_request_hash)
 
     def _sign(self, secret):
         string_to_sign = self._create_string_to_sign()
         signing_key = hmac.new(
             secret.encode('utf-8'),
-            self.dci_date.encode('utf-8'),
+            self.dci_date_str.encode('utf-8'),
             hashlib.sha256
         ).digest()
         return hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
@@ -101,3 +104,8 @@ class Signature(object):
             client_signature.encode('utf-8'),
             header_signature.encode('utf-8')
         )
+
+    def _update_dci_dates(self, dci_datetime_str):
+        dci_datetime = datetime.datetime.strptime(dci_datetime_str, self.dci_datetime_format)
+        self.dci_date_str = dci_datetime.strftime(self.dci_date_format)
+        self.dci_datetime_str = dci_datetime.strftime(self.dci_datetime_format)

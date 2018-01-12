@@ -115,6 +115,12 @@ def test_request_get_signed_headers_empty_headers():
     assert signed_headers == ''
 
 
+def test_add_header_lower_key():
+    request = AuthRequest()
+    request.add_header('Content-Type', 'application/json')
+    assert request.headers['content-type'] == 'application/json'
+
+
 def test_request_get_signed_headers_string_after_new_header_added():
     request = AuthRequest(headers={'content-type': 'application/json'})
     request.add_header('dci-datetime', '20171215T111929Z')

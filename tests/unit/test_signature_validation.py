@@ -33,7 +33,7 @@ def test_signature_is_valid():
     assert signature.is_valid('secret')
 
 
-def test_signature_is_invalid_because_is_a_replay_request():
+def test_signature_is_valid_even_after_5sec():
     request = AuthRequest(
         endpoint='/api/v1/jobs',
         headers={
@@ -41,9 +41,9 @@ def test_signature_is_invalid_because_is_a_replay_request():
             'dci-datetime': '20171215T111929Z'
         }
     )
-    now = datetime.datetime(2017, 12, 14, 11, 19, 28)
+    now = datetime.datetime(2017, 12, 15, 11, 19, 34)
     signature = Signature(request=request, now=now)
-    assert signature.is_valid('secret') is False
+    assert signature.is_valid('secret')
 
 
 def test_signature_is_invalid_because_endpoint_changed():

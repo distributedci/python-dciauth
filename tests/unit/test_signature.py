@@ -29,8 +29,8 @@ def test_signature_calc_dci_datetime_and_date_with_good_format():
     request = AuthRequest()
     now = datetime.datetime(2017, 12, 15, 11, 19, 29)
     signature = Signature(request=request, now=now)
-    assert signature.dci_date == '20171215'
-    assert signature.dci_datetime == '20171215T111929Z'
+    assert signature.dci_date_str == '20171215'
+    assert signature.dci_datetime_str == '20171215T111929Z'
 
 
 def test_2_signatures_now_is_different_if_not_defined():

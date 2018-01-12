@@ -6,7 +6,7 @@
 %endif
 
 Name:           python-dciauth
-Version:        2.0.1
+Version:        2.0.2
 Release:        1%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
@@ -63,6 +63,10 @@ Summary: %{summary}
 %{python3_sitelib}/dciauth/*
 
 %changelog
+* Fri Jan 12 2018 Guillaume Vincent <gvincent@redhat.com> 2.0.2-1
+- Fix error in signature validation due to time used
+- Lower case header request
+
 * Mon Jan 8 2018 Guillaume Vincent <gvincent@redhat.com> 2.0.1-1
 - Fix error in signature validation due to uppercase headers
 
