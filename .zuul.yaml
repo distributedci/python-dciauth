@@ -1,0 +1,9 @@
+---
+- project:
+    name: python-dciauth
+    check:
+      jobs:
+        - tox-pep8
+        - tox-py27
+        - tox-py36:
+            nodeset: fedora-latest-runc
