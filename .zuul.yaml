@@ -1,0 +1,7 @@
+---
+- project:
+    name: dci-auth
+    check:
+      jobs:
+        - tox-py27
+        - tox-py36
