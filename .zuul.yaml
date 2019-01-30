@@ -1,0 +1,7 @@
+---
+- project:
+    name: python-dciauth
+    check:
+      jobs:
+        - tox-py27
+        - tox-py36
