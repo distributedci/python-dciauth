@@ -1,0 +1,23 @@
+---
+- project:
+    name: python-dciauth
+    check:
+      jobs:
+        - tox-pep8
+        - tox-py27
+        - tox-py36:
+            nodeset: fedora-latest-runc
+        - dci-rpm-build
+        - dci-functional-tests
+    gate:
+      jobs:
+        - tox-pep8
+        - tox-py27
+        - tox-py36:
+            nodeset: fedora-latest-runc
+        - dci-rpm-build
+        - dci-functional-tests
+        - dci-rpm-publish
+    release:
+      jobs:
+        - upload-pypi
