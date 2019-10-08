@@ -19,26 +19,44 @@ from flask import request
 from flask import jsonify
 from dciauth.signature import Signature
 from dciauth.request import AuthRequest
+from dciauth.v2.signature import is_valid
+from dciauth.v2.headers import parse_headers
+
 
 app = Flask(__name__)
 
 
-@app.route("/api/v1/jobs", methods=['GET', 'POST'])
+@app.route("/api/v1/jobs", methods=["GET", "POST"])
 def get_jobs():
-    auth_request = AuthRequest(
-        method=request.method,
-        endpoint=request.path,
-        payload=request.get_json(silent=True),
-        headers=request.headers,
-        params=request.args.to_dict(flat=True)
-    )
-    signature = Signature(request=auth_request)
-    if not signature.is_valid('secret'):
-        raise Exception("Authentication failed: signature invalid")
-    if signature.is_expired():
-        raise Exception("Authentication failed: signature expired")
-    return jsonify({'jobs': []})
+    algorithm = request.headers["Authorization"].split(" ")[0]
+    if algorithm == "DCI-HMAC-SHA256":
+        auth_request = AuthRequest(
+            method=request.method,
+            endpoint=request.path,
+            payload=request.get_json(silent=True),
+            headers=request.headers,
+            params=request.args.to_dict(flat=True),
+        )
+        signature = Signature(request=auth_request)
+        if not signature.is_valid("secret"):
+            raise Exception("Authentication failed: signature invalid")
+        if signature.is_expired():
+            raise Exception("Authentication failed: signature expired")
+    if algorithm == "DCI2-HMAC-SHA256":
+        valid, error_message = is_valid(
+            {
+                "method": request.method,
+                "endpoint": request.path,
+                "payload": request.get_json(silent=True),
+                "params": request.args.to_dict(flat=True),
+            },
+            {"secret_key": "secret"},
+            parse_headers(request.headers),
+        )
+        if not valid:
+            raise Exception("Authentication failed: %s" % error_message)
+    return jsonify({"jobs": []})
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     app.run()
