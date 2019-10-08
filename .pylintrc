@@ -7,5 +7,6 @@ disable=
 # "W" Warnings for stylistic problems or minor programming issues
 # "C" Coding convention violations
  missing-docstring,
+ bad-continuation,
 # "R" Refactor recommendations
  too-many-arguments

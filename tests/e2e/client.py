@@ -19,6 +19,7 @@ import requests
 
 from dciauth.signature import Signature
 from dciauth.request import AuthRequest
+from dciauth.v2.headers import generate_headers
 
 auth_request = AuthRequest(endpoint='/api/v1/jobs')
 headers = Signature(request=auth_request).generate_headers('remoteci', 'client_id', 'secret')
@@ -42,4 +43,42 @@ headers = Signature(request=auth_request).generate_headers('remoteci', 'client_i
 file_path = os.path.join(os.path.dirname(__file__), 'test.txt')
 files = {'file': open(file_path, 'rb')}
 r = requests.post('http://127.0.0.1:5000/api/v1/jobs', headers=headers, files=files)
+assert r.status_code == 200
+
+
+headers = generate_headers(
+    {"host": "127.0.0.1:5000", "endpoint": "/api/v1/jobs"},
+    {"access_key": "remoteci/client_id", "secret_key": "secret"},
+)
+r = requests.get("http://127.0.0.1:5000/api/v1/jobs", headers=headers)
+assert r.status_code == 200
+
+params = {"limit": 100}
+headers = generate_headers(
+    {"host": "127.0.0.1:5000", "endpoint": "/api/v1/jobs", "params": params},
+    {"access_key": "remoteci/client_id", "secret_key": "secret"},
+)
+r = requests.get("http://127.0.0.1:5000/api/v1/jobs", params=params, headers=headers)
+assert r.status_code == 200
+
+payload = {"bar": "I'm ❤ bar"}
+headers = generate_headers(
+    {
+        "method": "POST",
+        "host": "127.0.0.1:5000",
+        "endpoint": "/api/v1/jobs",
+        "payload": payload,
+    },
+    {"access_key": "remoteci/client_id", "secret_key": "secret"},
+)
+r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, json=payload)
+assert r.status_code == 200
+
+headers = generate_headers(
+    {"method": "POST", "host": "127.0.0.1:5000", "endpoint": "/api/v1/jobs"},
+    {"access_key": "remoteci/client_id", "secret_key": "secret"},
+)
+files = {"file": open(file_path, "rb")}
+file_path = os.path.join(os.path.dirname(__file__), "test.txt")
+r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, files=files)
 assert r.status_code == 200
