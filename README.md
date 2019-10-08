@@ -2,52 +2,58 @@
 
 DCI authentication module used by dci-control-server and python-dciclient
 
-This section shows example programs written in python that illustrate how to work with Signature Version 4 in DCI. The algorithm used by dciauth is similar to [Signature Version 4 in AWS](http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html).
+This section shows example programs written in python that illustrate how to work with Signature Version 2 in DCI. The algorithm used by dciauth is identical to [Signature Version 4 in AWS](http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html).
 
-## Signing example:
+## Authentication example:
 
 ```python
 import requests
 
-from dciauth.signature import Signature
-from dciauth.request import AuthRequest
+from dciauth.v2.headers import generate_headers
 
-auth_request = AuthRequest(endpoint='/api/v1/jobs')
-headers = Signature(request=auth_request).generate_headers('remoteci', 'client_id', 'secret')
-r = requests.get('http://127.0.0.1:5000/api/v1/jobs', headers=headers)
-assert r.status_code == 200
+headers = generate_headers(
+    {"host": "api.distributed-ci.io", "endpoint": "/api/v1/jobs"},
+    {"access_key": "remoteci/client_id", "secret_key": "secret"},
+)
+requests.get("http://api.distributed-ci.io/api/v1/jobs", headers=headers)
 ```
 
-Here we are signing the GET request with `secret` and generate headers used by `requests` module.
-
 ## Validation example
-
 
 ```python
     from flask import request
 
-    from dciauth.signature import Signature
-    from dciauth.request import AuthRequest
+    from dciauth.v2.signature import is_valid, is_expired
 
-    auth_request = AuthRequest(
-        method=request.method,
-        endpoint=request.path,
-        payload=request.get_json(silent=True),
-        headers=request.headers,
-        params=request.args.to_dict(flat=True)
-    )
-    signature = Signature(request=auth_request)
-    if not signature.is_valid('secret'):
+    if not is_valid(
+        {
+            "method": request.method,
+            "endpoint": request.path,
+            "payload": request.get_json(silent=True),
+            "params": request.args.to_dict(flat=True),
+        },
+        {"secret_key": "secret"},
+        request.headers,
+    ):
         raise Exception("Authentication failed: signature invalid")
-    if signature.is_expired():
+    if is_expired(request.headers):
         raise Exception("Authentication failed: signature expired")
 ```
+
+## Using POSTMAN
+
+If you are using POSTMAN to discover DCI API you can use the following parameters with the AWS Signature authorization header:
+
+    GET https://api.distributed-ci.io/api/v1/identity
+    AccessKey=<DCI_CLIENT_ID>
+    SecretKey=<DCI_API_SECRET>
+    AWS Region="BHS3"
+    Service Name="api"
 
 ## License
 
 Apache 2.0
 
-
 ## Author Information
 
-Distributed-CI Team  <distributed-ci@redhat.com>
+Distributed-CI Team <distributed-ci@redhat.com>
