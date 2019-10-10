@@ -1,0 +1,55 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "b0f31e4a_e63a7bde",
+        "filename": "dciauth/v2/signature.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 78,
+      "author": {
+        "id": 29
+      },
+      "writtenOn": "2019-10-10T12:49:00Z",
+      "side": 1,
+      "message": "In the case of missformed Credential, these access to credential variable will generate ugly IndexError exception. Is it something expected to not handle these cases ?",
+      "revId": "bafa80bde27ba6e55437edec6c6ef53307e98d59",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "2474e725_f523d82f",
+        "filename": "dciauth/v2/signature.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 112,
+      "author": {
+        "id": 29
+      },
+      "writtenOn": "2019-10-10T12:49:00Z",
+      "side": 1,
+      "message": "ditto",
+      "revId": "bafa80bde27ba6e55437edec6c6ef53307e98d59",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "83bb64cc_88f61398",
+        "filename": "dciauth/v2/signature.py",
+        "patchSetId": 8
+      },
+      "lineNbr": 113,
+      "author": {
+        "id": 29
+      },
+      "writtenOn": "2019-10-10T12:49:00Z",
+      "side": 1,
+      "message": "ditto2",
+      "revId": "bafa80bde27ba6e55437edec6c6ef53307e98d59",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
