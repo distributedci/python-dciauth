@@ -1,0 +1,8 @@
+Code-Review+2: Haïkel Guémar <hguemar@fedoraproject.org>
+Workflow+1: Guillaume Vincent <gvincent@redhat.com>
+Verified+2: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-by: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-at: Mon, 14 Oct 2019 13:42:51 +0000
+Reviewed-on: https://softwarefactory-project.io/r/16766
+Project: python-dciauth
+Branch: refs/heads/master
