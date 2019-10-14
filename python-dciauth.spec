@@ -6,7 +6,7 @@
 %endif
 
 Name:           python-dciauth
-Version:        2.1.0
+Version:        2.1.1
 Release:        1%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
@@ -63,6 +63,9 @@ Summary: %{summary}
 %{python3_sitelib}/dciauth/*
 
 %changelog
+* Mon Oct 14 2019 Guillaume Vincent <gvincent@redhat.com> 2.1.1-1
+- Fix setup.py for pypi upload
+
 * Tue Oct 8 2019 Guillaume Vincent <gvincent@redhat.com> 2.1.0-1
 - Add DCI2-HMAC-SHA256 algorithm
 - Support AWS4-HMAC-SHA256 algorithm
