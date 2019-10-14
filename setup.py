@@ -20,26 +20,27 @@ import setuptools
 from dciauth import version
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
-readme = open(os.path.join(root_dir, 'README.md')).read()
+readme = open(os.path.join(root_dir, "README.md")).read()
 
 setuptools.setup(
-    name='dciauth',
+    name="dciauth",
     version=version.__version__,
-    packages=['dciauth'],
-    author='Distributed CI team',
-    author_email='distributed-ci@redhat.com',
-    description='DCI authentication module used by dci-control-server and python-dciclient',
+    packages=["dciauth"],
+    author="Distributed CI team",
+    author_email="distributed-ci@redhat.com",
+    description="DCI authentication module used by dci-control-server and python-dciclient",
     long_description=readme,
+    long_description_content_type="text/markdown",
     install_requires=[],
-    url='https://github.com/redhat-cip/python-dciauth',
-    license='Apache v2.0',
+    url="https://github.com/redhat-cip/python-dciauth",
+    license="Apache v2.0",
     classifiers=[
-        'Intended Audience :: Developers',
-        'Intended Audience :: Information Technology',
-        'License :: OSI Approved :: Apache Software License',
-        'Operating System :: POSIX :: Linux',
-        'Programming Language :: Python :: 2',
-        'Programming Language :: Python :: 3',
-        'Topic :: Security :: Cryptography'
-    ]
+        "Intended Audience :: Developers",
+        "Intended Audience :: Information Technology",
+        "License :: OSI Approved :: Apache Software License",
+        "Operating System :: POSIX :: Linux",
+        "Programming Language :: Python :: 2",
+        "Programming Language :: Python :: 3",
+        "Topic :: Security :: Cryptography",
+    ],
 )
