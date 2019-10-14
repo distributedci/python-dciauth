@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "389642e3_2f340f15",
+        "filename": "setup.py",
+        "patchSetId": 2
+      },
+      "lineNbr": 33,
+      "author": {
+        "id": 166
+      },
+      "writtenOn": "2019-10-14T13:14:18Z",
+      "side": 1,
+      "message": "According official doc that should fix our pypi upload issue.",
+      "revId": "645bf4f7706a4b1ce356cbc16c106d48ff26ba47",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
