@@ -6,7 +6,7 @@
 %endif
 
 Name:           python-dciauth
-Version:        2.1.1
+Version:        2.1.2
 Release:        1%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
@@ -63,6 +63,9 @@ Summary: %{summary}
 %{python3_sitelib}/dciauth/*
 
 %changelog
+* Tue Oct 15 2019 Guillaume Vincent <gvincent@redhat.com> 2.1.2-1
+- Fix missing v2 module in dist
+
 * Mon Oct 14 2019 Guillaume Vincent <gvincent@redhat.com> 2.1.1-1
 - Fix setup.py for pypi upload
 

@@ -25,7 +25,7 @@ readme = open(os.path.join(root_dir, "README.md")).read()
 setuptools.setup(
     name="dciauth",
     version=version.__version__,
-    packages=["dciauth"],
+    packages=["dciauth", "dciauth.v2"],
     author="Distributed CI team",
     author_email="distributed-ci@redhat.com",
     description="DCI authentication module used by dci-control-server and python-dciclient",
