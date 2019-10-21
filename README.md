@@ -51,7 +51,7 @@ requests.post("http://api.distributed-ci.io/api/v1/users", headers=headers, json
         {
             "method": request.method,
             "endpoint": request.path,
-            "payload": request.get_json(silent=True),
+            "data": request.data.decode("utf-8"),
             "params": request.args.to_dict(flat=True),
         },
         {"secret_key": "secret"},

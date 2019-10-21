@@ -34,11 +34,13 @@ def generate_headers(request, credentials):
     secret_key = credentials.get("secret_key")
     if not access_key or not secret_key:
         return {}
+    if 'payload' in request:
+        payload = request.pop('payload')
+        request['data'] = json.dumps(payload)
     authorization_header = _build_authorization_header(request, access_key, secret_key)
     return {
         "X-DCI-Date": _get_timestamp(request),
         "Authorization": authorization_header,
-        "Content-Type": _get_content_type(request),
     }
 
 
@@ -93,9 +95,8 @@ def _get_canonical_querystring(request):
 
 
 def _get_payload_hash(request):
-    payload = request.get("payload")
-    request_parameters = json.dumps(_order_dict(payload)) if payload else ""
-    return hashlib.sha256(request_parameters.encode("utf-8")).hexdigest()
+    data = request.get("data", "")
+    return hashlib.sha256(data.encode("utf-8")).hexdigest()
 
 
 def _get_canonical_headers(request):
@@ -103,7 +104,6 @@ def _get_canonical_headers(request):
         "canonical_headers",
         {
             "host": request.get("host", "api.distributed-ci.io"),
-            "content-type": _get_content_type(request),
             "x-dci-date": _get_timestamp(request),
         },
     )
@@ -157,7 +157,7 @@ def _get_timestamp(request):
 
 
 def _get_signed_headers(request):
-    return request.get("signed_headers", "content-type;host;x-dci-date")
+    return request.get("signed_headers", "host;x-dci-date")
 
 
 def _get_algorithm(request):
@@ -174,10 +174,6 @@ def _get_service(request):
 
 def _get_request_type(request):
     return request.get("request_type", "dci2_request")
-
-
-def _get_content_type(request):
-    return request.get("content-type", "application/json")
 
 
 def _order_dict(dictionary):
@@ -212,7 +208,6 @@ def parse_headers(headers):
         "signed_headers": signed_headers,
         "canonical_headers": {h: headers[h] for h in signed_headers.split(";")},
         "timestamp": timestamp,
-        "content-type": headers.get("content-type", "application/json"),
         "signature": signature,
     }
 
