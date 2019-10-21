@@ -27,16 +27,17 @@ import requests
 
 from dciauth.v2.headers import generate_headers
 
-payload = {"name": "user 1"}
+data = '{"name": "user 1"}'
 headers = generate_headers(
     {
         "method": "POST",
         "endpoint": "http://api.distributed-ci.io/api/v1/users",
-        "payload": payload,
+        "data": data,
     },
     {"access_key": "remoteci/client_id", "secret_key": "secret"},
 )
-requests.post("http://api.distributed-ci.io/api/v1/users", headers=headers, json=payload)
+headers.update({"Content-Type": "application/json"})
+requests.post("http://api.distributed-ci.io/api/v1/users", data=data, headers=headers)
 ```
 
 ## Validation example
@@ -51,7 +52,7 @@ requests.post("http://api.distributed-ci.io/api/v1/users", headers=headers, json
         {
             "method": request.method,
             "endpoint": request.path,
-            "payload": request.get_json(silent=True),
+            "data": request.data.decode("utf-8"),
             "params": request.args.to_dict(flat=True),
         },
         {"secret_key": "secret"},

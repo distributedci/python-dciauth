@@ -45,7 +45,7 @@ def test_signature_is_valid_with_post_request():
         "now": datetime(2017, 12, 15, 11, 19, 30),
         "method": "POST",
         "endpoint": "/api/v1/users",
-        "payload": {"name": "foo"},
+        "data": '{"name": "foo"}',
     }
     credential = {
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
@@ -67,7 +67,7 @@ def test_signature_is_valid_with_put_request():
         "now": datetime(2017, 12, 15, 11, 19, 30),
         "method": "PUT",
         "endpoint": "/api/v1/users",
-        "payload": {"name": "foo"},
+        "data": '{"name": "foo"}',
     }
     credential = {
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
@@ -119,6 +119,41 @@ def test_signature_aws4_is_valid():
             "Connection": "keep-alive",
             "Postman-Token": "6d95b7c6-cdd8-4e71-9ccc-ed2b9533924e",
             "Host": "127.0.0.1:5000",
+            "Cache-Control": "no-cache",
+            "Accept": "*/*",
+            "Accept-Encoding": "gzip, deflate",
+        }
+    )
+    assert is_valid(request, credential, headers)[0]
+
+
+def test_signature_aws4_post_request_is_valid():
+    request = {
+        "method": "POST",
+        "now": datetime(2019, 10, 21, 10, 56, 28),
+        "endpoint": "/api/v1/jobs",
+        "host": "api.distributed-ci.io",
+        "data": """{
+    "components": [
+        "d4bcd2e2-98df-4962-b224-8d50eedaba1b"
+    ],
+    "topic_id": "c4171062-e2b4-4b60-9a5f-3e2fb32b4f68"
+}"""
+    }
+    credential = {
+        "access_key": "remoteci/79626298-a124-4e22-b5be-ec1a5e46fb41",
+        "secret_key": "XFe4YmxzehlZMGQsL3svsbIrhKBBPHiRWdw22uclpAsX8a6sSixQrZkdxxqdVBDZ",
+    }
+    headers = parse_headers(
+        {
+            "Authorization": "AWS4-HMAC-SHA256 Credential=remoteci/79626298-a124-4e22-b5be-ec1a5e46fb41/20191021/BHS3/api/aws4_request, SignedHeaders=content-type;host;x-amz-content-sha256;x-amz-date, Signature=5ab513f88534f6cd454d9604dbbac45339b0ad1b1bbfb36996956eef7981be3f",
+            "X-Amz-Date": "20191021T105628Z",
+            "X-Amz-Content-Sha256": "929e03af12349f2b9f30f892ddc5ca1d8c9f4b68a358a464428c1088268ea765",
+            "Content-Type": "application/json",
+            "Host": "api.distributed-ci.io",
+            "User-Agent": "PostmanRuntime/7.17.1",
+            "Connection": "keep-alive",
+            "Postman-Token": "d055dc78-4b0e-4d38-bc21-2c138e7fe316",
             "Cache-Control": "no-cache",
             "Accept": "*/*",
             "Accept-Encoding": "gzip, deflate",
