@@ -21,17 +21,15 @@ def test_parse_header():
     assert parse_headers(
         {
             "X-DCI-Date": "20171215T111929Z",
-            "Content-Type": "application/json",
-            "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
+            "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
             "Host": "api.distributed-ci.io",
         }
     ) == {
-        "signed_headers": "content-type;host;x-dci-date",
+        "signed_headers": "host;x-dci-date",
         "service": "api",
         "datestamp": "20171215",
         "canonical_headers": {
             "x-dci-date": "20171215T111929Z",
-            "content-type": "application/json",
             "host": "api.distributed-ci.io",
         },
         "client_id": "464cc0a3-d638-4081-a69e-4c80261f3ba5",
@@ -39,7 +37,6 @@ def test_parse_header():
         "region": "BHS3",
         "host": "api.distributed-ci.io",
         "algorithm": "DCI2-HMAC-SHA256",
-        "content-type": "application/json",
         "timestamp": "20171215T111929Z",
         "request_type": "dci2_request",
         "signature": "6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
@@ -49,18 +46,16 @@ def test_parse_header():
 def test_parse_header_ignore_case():
     assert parse_headers(
         {
-            "x-dci-date": "20171215T111929Z",
-            "content-Type": "application/json",
-            "auThorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
+            "X-DCI-Date": "20171215T111929Z",
+            "auThorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
             "HOST": "api.distributed-ci.io",
         }
     ) == {
-        "signed_headers": "content-type;host;x-dci-date",
+        "signed_headers": "host;x-dci-date",
         "service": "api",
         "datestamp": "20171215",
         "canonical_headers": {
             "x-dci-date": "20171215T111929Z",
-            "content-type": "application/json",
             "host": "api.distributed-ci.io",
         },
         "client_id": "464cc0a3-d638-4081-a69e-4c80261f3ba5",
@@ -68,7 +63,6 @@ def test_parse_header_ignore_case():
         "region": "BHS3",
         "host": "api.distributed-ci.io",
         "algorithm": "DCI2-HMAC-SHA256",
-        "content-type": "application/json",
         "timestamp": "20171215T111929Z",
         "request_type": "dci2_request",
         "signature": "6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
@@ -80,8 +74,7 @@ def test_parse_header_return_none_if_access_key_len_not_equal_to_5():
         parse_headers(
             {
                 "X-DCI-Date": "20171215T111929Z",
-                "Content-Type": "application/json",
-                "Authorization": "DCI2-HMAC-SHA256 Credential=464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
+                "Authorization": "DCI2-HMAC-SHA256 Credential=464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
                 "Host": "api.distributed-ci.io",
             }
         )
@@ -93,8 +86,7 @@ def test_parse_header_return_none_if_no_timestamp_header():
     assert (
         parse_headers(
             {
-                "Content-Type": "application/json",
-                "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
+                "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
                 "Host": "api.distributed-ci.io",
             }
         )
@@ -107,8 +99,7 @@ def test_parse_header_return_none_if_timestamp_header_unknown():
         parse_headers(
             {
                 "X-Foo-Date": "20171215T111929Z",
-                "Content-Type": "application/json",
-                "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
+                "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
                 "Host": "api.distributed-ci.io",
             }
         )
@@ -118,8 +109,7 @@ def test_parse_header_return_none_if_timestamp_header_unknown():
         parse_headers(
             {
                 "X-Amz-Date": "20171215T111929Z",
-                "Content-Type": "application/json",
-                "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-amz-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
+                "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-amz-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
                 "Host": "api.distributed-ci.io",
             }
         )["timestamp"]

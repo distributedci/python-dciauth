@@ -55,7 +55,7 @@ def _get_claimed_request(request, headers):
             "method": request.get("method", "GET"),
             "endpoint": request.get("endpoint", "/"),
             "params": request.get("params", {}),
-            "payload": request.get("payload", {}),
+            "data": request.get("data", ""),
         }
     )
     return claimed_request

@@ -57,12 +57,28 @@ def test_generate_headers_default_values():
     }
     assert generate_headers(request, credential) == {
         "X-DCI-Date": "20171215T111929Z",
-        "Content-Type": "application/json",
-        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
+        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=aed55a70e89f8b541c9012afb2498b7139e64419f103efbea7a1b99744bd54ce",
     }
 
 
 def test_generate_headers_post():
+    request = {
+        "method": "POST",
+        "endpoint": "/api/v1/users",
+        "data": '{"name": "foo"}',
+        "now": datetime(2017, 12, 15, 11, 19, 29),
+    }
+    credential = {
+        "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
+        "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
+    }
+    assert generate_headers(request, credential) == {
+        "X-DCI-Date": "20171215T111929Z",
+        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=ee6a1adfd78e47852b3b9daa1254849f0f4cce082de79de0957e53398c7946f8",
+    }
+
+
+def test_generate_headers_post_with_payload():
     request = {
         "method": "POST",
         "endpoint": "/api/v1/users",
@@ -75,16 +91,14 @@ def test_generate_headers_post():
     }
     assert generate_headers(request, credential) == {
         "X-DCI-Date": "20171215T111929Z",
-        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=3212f321bdf66c72d12ead089d17a01ed5ce8858976dff688fd60785216bf624",
-        "Content-Type": "application/json",
+        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=ee6a1adfd78e47852b3b9daa1254849f0f4cce082de79de0957e53398c7946f8",
     }
 
 
-def test_generate_headers_put():
+def test_generate_headers_post_file():
     request = {
-        "method": "PUT",
-        "endpoint": "/api/v1/users",
-        "payload": {"name": "foo"},
+        "method": "POST",
+        "endpoint": "/api/v1/jobs",
         "now": datetime(2017, 12, 15, 11, 19, 29),
     }
     credential = {
@@ -92,9 +106,25 @@ def test_generate_headers_put():
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
     assert generate_headers(request, credential) == {
-        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=53422ab72a75871f8ecc75b1228c71664a4ab22cd02fb5c8577c4f856d6e8e87",
-        "Content-Type": "application/json",
         "X-DCI-Date": "20171215T111929Z",
+        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=8d0499f9179fd8efefa49628fc2d7a226224c4cb76495a5f9abf5cb4680f61c9",
+    }
+
+
+def test_generate_headers_put():
+    request = {
+        "method": "PUT",
+        "endpoint": "/api/v1/users",
+        "data": '{"name": "foo"}',
+        "now": datetime(2017, 12, 15, 11, 19, 29),
+    }
+    credential = {
+        "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
+        "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
+    }
+    assert generate_headers(request, credential) == {
+        "X-DCI-Date": "20171215T111929Z",
+        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=6e381497fd432306daa7ff33ba115006ae54b75a9dafc6bc58c8e58589d81b59",
     }
 
 
@@ -109,9 +139,8 @@ def test_generate_headers_delete():
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
     assert generate_headers(request, credential) == {
-        "Content-Type": "application/json",
         "X-DCI-Date": "20171215T111929Z",
-        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=295b646610163e8914765053998848cb2ed8c5db63af44b847f21ced345f43a3",
+        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=260e496d5d8bd13253831e1a41abfa0eea477707f1beefb9b92d59238670d62e",
     }
 
 
@@ -119,7 +148,7 @@ def test_generate_headers_with_claimed_stamps():
     request = {
         "method": "POST",
         "endpoint": "/api/v1/users",
-        "payload": {"name": "foo"},
+        "data": '{"name": "foo"}',
         "timestamp": "20171215T111929Z",
         "datestamp": "20171215",
     }
@@ -129,6 +158,5 @@ def test_generate_headers_with_claimed_stamps():
     }
     assert generate_headers(request, credential) == {
         "X-DCI-Date": "20171215T111929Z",
-        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=3212f321bdf66c72d12ead089d17a01ed5ce8858976dff688fd60785216bf624",
-        "Content-Type": "application/json",
+        "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=ee6a1adfd78e47852b3b9daa1254849f0f4cce082de79de0957e53398c7946f8",
     }

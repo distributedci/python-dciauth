@@ -36,7 +36,7 @@ headers = generate_headers(
     },
     {"access_key": "remoteci/client_id", "secret_key": "secret"},
 )
-requests.post("http://api.distributed-ci.io/api/v1/users", headers=headers, json=payload)
+requests.post("http://api.distributed-ci.io/api/v1/users", json=payload, headers=headers)
 ```
 
 ## Validation example
@@ -51,7 +51,7 @@ requests.post("http://api.distributed-ci.io/api/v1/users", headers=headers, json
         {
             "method": request.method,
             "endpoint": request.path,
-            "payload": request.get_json(silent=True),
+            "data": request.data.decode("utf-8"),
             "params": request.args.to_dict(flat=True),
         },
         {"secret_key": "secret"},
