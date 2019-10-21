@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
-set -eux
-nohup python tests/e2e/server.py > /dev/null 2>&1 &
+nohup python -u tests/e2e/server.py > nohup.out 2>&1 &
 PID=$!
 sleep 1
 python tests/e2e/client.py
+TEST_RESULT=$?
+cat nohup.out
+rm nohup.out
 kill ${PID}
-sleep 1
+exit ${TEST_RESULT}
