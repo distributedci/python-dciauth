@@ -115,3 +115,13 @@ file_path = os.path.join(os.path.dirname(__file__), "test.xml")
 files = {"file": ("test.xml", open(file_path, "rb"), "application/junit")}
 r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, files=files)
 assert r.status_code == 200
+
+auth_request = AuthRequest(
+    method="POST", endpoint="/api/v1/jobs", headers={"content-type": "application/json"}
+)
+headers = Signature(request=auth_request).generate_headers(
+    "remoteci", "client_id", "secret"
+)
+file_path = os.path.join(os.path.dirname(__file__), "nrt.json")
+r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, data=open(file_path, "rb"))
+assert r.status_code == 200

@@ -58,7 +58,7 @@ class AuthRequest(object):
         return urlencode(self._order_dict(self.params))
 
     def get_payload_string(self):
-        if self.payload:
+        if self.payload and isinstance(self.payload, dict):
             return json.dumps(self._order_dict(self.payload))
         return ''
 
