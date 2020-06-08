@@ -1,13 +1,8 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
-%if 0%{?fedora}
-%{!?python3_pkgversion: %global python3_pkgversion 3}
-%else
-%{!?python3_pkgversion: %global python3_pkgversion 34}
-%endif
 
 Name:           python-dciauth
 Version:        2.1.4
-Release:        1%{?dist}
+Release:        2%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
 License:        ASL 2.0
@@ -15,26 +10,26 @@ URL:            https://github.com/redhat-cip/python-dciauth
 Source0:        dciauth-%{version}.tar.gz
 
 BuildArch:      noarch
-BuildRequires:  python2-devel
-BuildRequires:  python2-setuptools
-BuildRequires:  python%{python3_pkgversion}-devel
-BuildRequires:  python%{python3_pkgversion}-setuptools
 
 %description
 %{summary}
 
 %package -n python2-dciauth
 Summary: %{summary}
+BuildRequires:  python2-devel
+BuildRequires:  python2-setuptools
 %{?python_provide:%python_provide python2-dciauth}
 
 %description -n python2-dciauth
 %{summary}
 
-%package -n python%{python3_pkgversion}-dciauth
+%package -n python3-dciauth
 Summary: %{summary}
+BuildRequires:  python3-devel
+BuildRequires:  python3-setuptools
 %{?python_provide:%python_provide python%{python3_pkgversion}-dciauth}
 
-%description -n python%{python3_pkgversion}-dciauth
+%description -n python3-dciauth
 %{summary}
 
 %prep
@@ -55,7 +50,7 @@ Summary: %{summary}
 %dir %{python2_sitelib}/dciauth
 %{python2_sitelib}/dciauth/*
 
-%files -n python%{python3_pkgversion}-dciauth
+%files -n python3-dciauth
 %license LICENSE
 %doc README.md
 %{python3_sitelib}/*.egg-info
@@ -63,6 +58,10 @@ Summary: %{summary}
 %{python3_sitelib}/dciauth/*
 
 %changelog
+* Mon Jun 08 2020 Bill Peck <bpeck@redhat.com> 2.1.4-2
+- Rebuild for RHEL-8
+- Rebase to python36 on EL8
+
 * Wed Apr 8 2020 Guillaume Vincent <gvincent@redhat.com> 2.1.4-1
 - Fix payload to string transformation
 
