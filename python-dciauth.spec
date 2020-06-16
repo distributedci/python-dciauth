@@ -1,8 +1,13 @@
+%if 0%{?rhel} && 0%{?rhel} < 8
+%global with_python2 1
+%else
+%global with_python3 1
+%endif
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-dciauth
 Version:        2.1.4
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
 License:        ASL 2.0
@@ -14,6 +19,7 @@ BuildArch:      noarch
 %description
 %{summary}
 
+%if 0%{?with_python2}
 %package -n python2-dciauth
 Summary: %{summary}
 BuildRequires:  python2-devel
@@ -22,7 +28,9 @@ BuildRequires:  python2-setuptools
 
 %description -n python2-dciauth
 %{summary}
+%endif
 
+%if 0%{?with_python3}
 %package -n python3-dciauth
 Summary: %{summary}
 BuildRequires:  python3-devel
@@ -31,33 +39,49 @@ BuildRequires:  python3-setuptools
 
 %description -n python3-dciauth
 %{summary}
+%endif
 
 %prep
 %autosetup -n dciauth-%{version}
 
 %build
+%if 0%{?with_python2}
 %py2_build
+%endif
+%if 0%{?with_python3}
 %py3_build
+%endif
 
 %install
+%if 0%{?with_python2}
 %py2_install
+%endif
+%if 0%{?with_python3}
 %py3_install
+%endif
 
+%if 0%{?with_python2}
 %files -n python2-dciauth
 %license LICENSE
 %doc README.md
 %{python2_sitelib}/*.egg-info
 %dir %{python2_sitelib}/dciauth
 %{python2_sitelib}/dciauth/*
+%endif
 
+%if 0%{?with_python3}
 %files -n python3-dciauth
 %license LICENSE
 %doc README.md
 %{python3_sitelib}/*.egg-info
 %dir %{python3_sitelib}/dciauth
 %{python3_sitelib}/dciauth/*
+%endif
 
 %changelog
+* Tue Jun 16 2020 Haïkel Guémar <hguemar@fedoraproject.org> - 2.1.4-3
+- Make it a single-stack package on EL7/EL8
+
 * Mon Jun 08 2020 Bill Peck <bpeck@redhat.com> 2.1.4-2
 - Rebuild for RHEL-8
 - Rebase to python36 on EL8
