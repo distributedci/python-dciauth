@@ -4,6 +4,7 @@ DCI authentication module used by dci-control-server and python-dciclient
 
 This section shows example programs written in python that illustrate how to work with Signature Version 2 in DCI. The algorithm used by dciauth is identical to [Signature Version 4 in AWS](http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html).
 
+
 ## Authentication example:
 
 GET
