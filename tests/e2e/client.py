@@ -122,6 +122,15 @@ auth_request = AuthRequest(
 headers = Signature(request=auth_request).generate_headers(
     "remoteci", "client_id", "secret"
 )
-file_path = os.path.join(os.path.dirname(__file__), "nrt.json")
-r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, data=open(file_path, "rb"))
+nrt_json = os.path.join(os.path.dirname(__file__), "nrt.json")
+r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, data=open(nrt_json, "rb"))
 assert r.status_code == 200
+
+headers = generate_headers(
+    {"method": "POST", "host": "127.0.0.1:5000", "endpoint": "/api/v1/files"},
+    {"access_key": "remoteci/client_id", "secret_key": "secret"},
+)
+files = {"file": ("nrt.json", open(nrt_json, "rb"), "application/json")}
+r = requests.post("http://127.0.0.1:5000/api/v1/files", headers=headers, files=files)
+assert r.status_code == 200
+assert r.json()["content"] == open(nrt_json, "r").read()
