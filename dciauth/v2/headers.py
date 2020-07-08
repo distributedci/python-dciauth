@@ -34,7 +34,7 @@ def generate_headers(request, credentials):
     secret_key = credentials.get("secret_key")
     if not access_key or not secret_key:
         return {}
-    if 'payload' in request:
+    if 'payload' in request and request['payload']:
         payload = request.pop('payload')
         request['data'] = json.dumps(payload)
     authorization_header = _build_authorization_header(request, access_key, secret_key)
