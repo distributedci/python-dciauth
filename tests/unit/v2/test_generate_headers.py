@@ -18,11 +18,13 @@ from datetime import datetime
 
 from dciauth.v2.headers import generate_headers
 
+_REQUEST_HEADERS = {'Content-Type': 'application/json'}
+
 
 def test_empty_credential_returns_empty_header():
     request = {"endpoint": "/api/v1/identity"}
     credential = {}
-    assert generate_headers(request, credential) == {}
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {}
 
 
 def test_credential_field_in_autorization_header():
@@ -37,7 +39,7 @@ def test_credential_field_in_autorization_header():
         "access_key": "feeder/464cc0a3-d638-a69e-4081-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    authorization_header = generate_headers(request, credential)["Authorization"]
+    authorization_header = generate_headers(request, credential, _REQUEST_HEADERS)["Authorization"]
     assert "DCI3-HMAC-SHA256" in authorization_header
     assert (
         "Credential=feeder/464cc0a3-d638-a69e-4081-4c80261f3ba5/20171215/BHS4/api2/dci3_request"
@@ -55,7 +57,7 @@ def test_generate_headers_default_values():
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    assert generate_headers(request, credential) == {
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=aed55a70e89f8b541c9012afb2498b7139e64419f103efbea7a1b99744bd54ce",
     }
@@ -72,7 +74,7 @@ def test_generate_headers_post():
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    assert generate_headers(request, credential) == {
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=ee6a1adfd78e47852b3b9daa1254849f0f4cce082de79de0957e53398c7946f8",
     }
@@ -89,7 +91,7 @@ def test_generate_headers_post_with_payload():
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    assert generate_headers(request, credential) == {
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=ee6a1adfd78e47852b3b9daa1254849f0f4cce082de79de0957e53398c7946f8",
     }
@@ -105,7 +107,7 @@ def test_generate_headers_post_file():
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    assert generate_headers(request, credential) == {
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=8d0499f9179fd8efefa49628fc2d7a226224c4cb76495a5f9abf5cb4680f61c9",
     }
@@ -122,7 +124,7 @@ def test_generate_headers_put():
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    assert generate_headers(request, credential) == {
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=6e381497fd432306daa7ff33ba115006ae54b75a9dafc6bc58c8e58589d81b59",
     }
@@ -138,7 +140,7 @@ def test_generate_headers_delete():
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    assert generate_headers(request, credential) == {
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=260e496d5d8bd13253831e1a41abfa0eea477707f1beefb9b92d59238670d62e",
     }
@@ -156,7 +158,7 @@ def test_generate_headers_with_claimed_stamps():
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
     }
-    assert generate_headers(request, credential) == {
+    assert generate_headers(request, credential, _REQUEST_HEADERS) == {
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=ee6a1adfd78e47852b3b9daa1254849f0f4cce082de79de0957e53398c7946f8",
     }

@@ -35,7 +35,7 @@ def generate_headers(request, credentials):
     if not access_key or not secret_key:
         return {}
     if 'payload' in request:
-        payload = request.pop('payload')
+        payload = request.pop('payload').encode("utf-8")
         request['data'] = json.dumps(payload)
     authorization_header = _build_authorization_header(request, access_key, secret_key)
     return {
@@ -48,6 +48,7 @@ def _build_authorization_header(request, access_key, secret_key):
     string_to_sign = _get_string_to_sign(request)
     signing_key = _get_signing_key(request, secret_key)
     signature = hmac.new(signing_key, string_to_sign, hashlib.sha256).hexdigest()
+    # pylint: disable=line-too-long
     return """{algorithm} Credential={access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}""".format(
         algorithm=_get_algorithm(request),
         access_key=access_key,
@@ -55,6 +56,7 @@ def _build_authorization_header(request, access_key, secret_key):
         signed_headers=_get_signed_headers(request),
         signature=signature,
     )
+    # pylint: enable=line-too-long
 
 
 def _get_string_to_sign(request):
@@ -94,7 +96,7 @@ def _get_canonical_querystring(request):
 
 def _get_payload_hash(request):
     data = request.get("data", "")
-    return hashlib.sha256(data.encode("utf-8")).hexdigest()
+    return hashlib.sha256(data).hexdigest()
 
 
 def _get_canonical_headers(request):
