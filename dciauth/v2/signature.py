@@ -20,7 +20,7 @@ from datetime import datetime, timedelta
 from dciauth.v2.headers import generate_headers, TIMESTAMP_FORMAT, _lower
 
 
-def is_valid(request, credential, parsed_headers):
+def is_valid(request, credential, parsed_headers, headers):
     if parsed_headers is None:
         return False, "headers are malformated"
 
@@ -29,7 +29,7 @@ def is_valid(request, credential, parsed_headers):
 
     claimed_request = _get_claimed_request(request, parsed_headers)
     claimed_credential = _get_claimed_credential(credential, parsed_headers)
-    claimed_headers = generate_headers(claimed_request, claimed_credential)
+    claimed_headers = generate_headers(claimed_request, claimed_credential, headers)
     signature = parsed_headers.get("signature")
     claimed_signature = _get_signature(_lower(claimed_headers))
     if _signature_equals(signature, claimed_signature):
