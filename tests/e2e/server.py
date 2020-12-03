@@ -47,11 +47,11 @@ def get_jobs():
             {
                 "method": request.method,
                 "endpoint": request.path,
-                "data": request.data.decode("utf-8"),
+                "data": request.data,
                 "params": request.args.to_dict(flat=True),
             },
             {"secret_key": "secret"},
-            parse_headers(request.headers),
+            parse_headers(request.headers)
         )
         if not valid:
             raise Exception("Authentication failed: %s" % error_message)
