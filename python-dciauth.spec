@@ -6,8 +6,8 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-dciauth
-Version:        2.1.4
-Release:        3%{?dist}
+Version:        2.1.5
+Release:        1%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
 License:        ASL 2.0
@@ -79,6 +79,9 @@ BuildRequires:  python3-setuptools
 %endif
 
 %changelog
+* Fri Dec 04 2020 Yassine Lamgarchal <ylamgarc@redhat.com > - 2.1.5-1
+- Transform data in is_valid method into binary string
+
 * Tue Jun 16 2020 Haïkel Guémar <hguemar@fedoraproject.org> - 2.1.4-3
 - Make it a single-stack package on EL7/EL8
 

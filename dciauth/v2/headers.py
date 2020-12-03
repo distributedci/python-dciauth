@@ -29,14 +29,22 @@ TIMESTAMP_FORMAT = "%Y%m%dT%H%M%SZ"
 DATESTAMP_FORMAT = "%Y%m%d"
 
 
+def encode_data(data):
+    try:
+        return (data or "").encode("utf-8")
+    except (UnicodeDecodeError, AttributeError):
+        return data
+
+
 def generate_headers(request, credentials):
     access_key = credentials.get("access_key")
     secret_key = credentials.get("secret_key")
     if not access_key or not secret_key:
         return {}
-    if 'payload' in request:
-        payload = request.pop('payload')
-        request['data'] = json.dumps(payload)
+    if "payload" in request:
+        payload = request.pop("payload")
+        request["data"] = json.dumps(payload)
+    request["data"] = encode_data(request.get("data"))
     authorization_header = _build_authorization_header(request, access_key, secret_key)
     return {
         "X-DCI-Date": _get_timestamp(request),
@@ -48,6 +56,7 @@ def _build_authorization_header(request, access_key, secret_key):
     string_to_sign = _get_string_to_sign(request)
     signing_key = _get_signing_key(request, secret_key)
     signature = hmac.new(signing_key, string_to_sign, hashlib.sha256).hexdigest()
+    # pylint: disable=line-too-long
     return """{algorithm} Credential={access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}""".format(
         algorithm=_get_algorithm(request),
         access_key=access_key,
@@ -55,6 +64,7 @@ def _build_authorization_header(request, access_key, secret_key):
         signed_headers=_get_signed_headers(request),
         signature=signature,
     )
+    # pylint: enable=line-too-long
 
 
 def _get_string_to_sign(request):
@@ -93,8 +103,8 @@ def _get_canonical_querystring(request):
 
 
 def _get_payload_hash(request):
-    data = request.get("data", "")
-    return hashlib.sha256(data.encode("utf-8")).hexdigest()
+    data = request.get("data")
+    return hashlib.sha256(data).hexdigest()
 
 
 def _get_canonical_headers(request):
