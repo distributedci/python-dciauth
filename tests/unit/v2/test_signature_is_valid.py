@@ -18,6 +18,8 @@ from datetime import datetime
 from dciauth.v2.signature import is_valid
 from dciauth.v2.headers import parse_headers
 
+_REQUEST_HEADERS = {'Content-Type': 'application/json'}
+
 
 def test_signature_is_valid():
     request = {
@@ -37,7 +39,7 @@ def test_signature_is_valid():
             "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
 
 
 def test_signature_is_valid_with_post_request():
@@ -59,7 +61,7 @@ def test_signature_is_valid_with_post_request():
             "host": "api.distributed-ci.io",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
 
 
 def test_signature_is_valid_with_put_request():
@@ -81,7 +83,7 @@ def test_signature_is_valid_with_put_request():
             "host": "api.distributed-ci.io",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
 
 
 def test_signature_is_valid_with_delete_request():
@@ -102,7 +104,7 @@ def test_signature_is_valid_with_delete_request():
             "host": "api.distributed-ci.io",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
 
 
 def test_signature_aws4_is_valid():
@@ -124,7 +126,7 @@ def test_signature_aws4_is_valid():
             "Accept-Encoding": "gzip, deflate",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
 
 
 def test_signature_aws4_post_request_is_valid():
@@ -159,13 +161,13 @@ def test_signature_aws4_post_request_is_valid():
             "Accept-Encoding": "gzip, deflate",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
 
 
 def test_signature_is_invalid_if_no_authorization():
     request = {"endpoint": "/api/v1/users/ef837f60-87f4-4432-a249-b4977ec5bb45"}
     headers = parse_headers({"Host": "api.distributed-ci.io"})
-    valid, error_message = is_valid(request, {}, headers)
+    valid, error_message = is_valid(request, {}, headers, _REQUEST_HEADERS)
     assert valid is False
     assert "headers are malformated" in error_message
 
@@ -181,9 +183,9 @@ def test_signature_is_invalid_because_endpoint_changed():
             "Host": "api.distributed-ci.io",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
     request = {"now": datetime(2017, 12, 15, 11, 19, 30), "endpoint": "/api/v1/admin"}
-    valid, error_message = is_valid(request, credential, headers)
+    valid, error_message = is_valid(request, credential, headers, _REQUEST_HEADERS)
     assert valid is False
     assert "signature is invalid" in error_message
 
@@ -207,7 +209,7 @@ def test_signature_is_expired():
             "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
         }
     )
-    valid, error_message = is_valid(request, credential, headers)
+    valid, error_message = is_valid(request, credential, headers, _REQUEST_HEADERS)
     assert valid is False
     assert "signature is expired" in error_message
 
@@ -232,7 +234,7 @@ def test_signature_aws_is_expired():
             "Accept-Encoding": "gzip, deflate",
         }
     )
-    valid, error_message = is_valid(request, credential, headers)
+    valid, error_message = is_valid(request, credential, headers, _REQUEST_HEADERS)
     assert valid is False
     assert "signature is expired" in error_message
 
@@ -256,7 +258,7 @@ def test_signature_is_not_expired():
             "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=content-type;host;x-dci-date, Signature=6fd8a24d8eb52e7a1b62f26f48f5a865a56cf08e492b56e16066e2cd4ce3e02e",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]
 
 
 def test_signature_aws_is_not_expired():
@@ -279,4 +281,4 @@ def test_signature_aws_is_not_expired():
             "Accept-Encoding": "gzip, deflate",
         }
     )
-    assert is_valid(request, credential, headers)[0]
+    assert is_valid(request, credential, headers, _REQUEST_HEADERS)[0]

@@ -22,6 +22,10 @@ from dciauth.signature import Signature
 from dciauth.request import AuthRequest
 from dciauth.v2.headers import generate_headers
 
+_REQUEST_HEADERS = {'Content-Type': 'application/json'}
+
+# #################### TEST HMAC V1 #################################
+
 auth_request = AuthRequest(endpoint="/api/v1/jobs")
 headers = Signature(request=auth_request).generate_headers(
     "remoteci", "client_id", "secret"
@@ -62,10 +66,23 @@ files = {"file": open(file_path, "rb")}
 r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, files=files)
 assert r.status_code == 200
 
+auth_request = AuthRequest(
+    method="POST", endpoint="/api/v1/jobs", headers={"content-type": "application/json"}
+)
+headers = Signature(request=auth_request).generate_headers(
+    "remoteci", "client_id", "secret"
+)
+file_path = os.path.join(os.path.dirname(__file__), "nrt.json")
+r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, data=open(file_path, "rb"))
+assert r.status_code == 200
+
+
+# #################### TEST HMAC V2 #################################
 
 headers = generate_headers(
     {"host": "127.0.0.1:5000", "endpoint": "/api/v1/jobs"},
     {"access_key": "remoteci/client_id", "secret_key": "secret"},
+    _REQUEST_HEADERS
 )
 headers.update({"Content-Type": "application/json"})
 r = requests.get("http://127.0.0.1:5000/api/v1/jobs", headers=headers)
@@ -75,6 +92,7 @@ params = {"limit": 100}
 headers = generate_headers(
     {"host": "127.0.0.1:5000", "endpoint": "/api/v1/jobs", "params": params},
     {"access_key": "remoteci/client_id", "secret_key": "secret"},
+    _REQUEST_HEADERS
 )
 headers.update({"Content-Type": "application/json"})
 r = requests.get("http://127.0.0.1:5000/api/v1/jobs", params=params, headers=headers)
@@ -89,6 +107,7 @@ headers = generate_headers(
         "data": data,
     },
     {"access_key": "remoteci/client_id", "secret_key": "secret"},
+    _REQUEST_HEADERS
 )
 headers.update({"Content-Type": "application/json"})
 r = requests.post("http://127.0.0.1:5000/api/v1/jobs", data=data, headers=headers)
@@ -103,6 +122,7 @@ headers = generate_headers(
         "payload": payload,
     },
     {"access_key": "remoteci/client_id", "secret_key": "secret"},
+    _REQUEST_HEADERS
 )
 r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, json=payload)
 assert r.status_code == 200
@@ -110,18 +130,19 @@ assert r.status_code == 200
 headers = generate_headers(
     {"method": "POST", "host": "127.0.0.1:5000", "endpoint": "/api/v1/jobs"},
     {"access_key": "remoteci/client_id", "secret_key": "secret"},
+    _REQUEST_HEADERS
 )
 file_path = os.path.join(os.path.dirname(__file__), "test.xml")
 files = {"file": ("test.xml", open(file_path, "rb"), "application/junit")}
 r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, files=files)
 assert r.status_code == 200
 
-auth_request = AuthRequest(
-    method="POST", endpoint="/api/v1/jobs", headers={"content-type": "application/json"}
+file_path = os.path.join(os.path.dirname(__file__), "run.sh.tgz")
+headers = generate_headers(
+    {"method": "POST", "host": "127.0.0.1:5000", "endpoint": "/api/v1/jobs", "data": open(file_path, "rb").read()},
+    {"access_key": "remoteci/client_id", "secret_key": "secret"},
+    {"Content-Type": "application/octet-stream"}
 )
-headers = Signature(request=auth_request).generate_headers(
-    "remoteci", "client_id", "secret"
-)
-file_path = os.path.join(os.path.dirname(__file__), "nrt.json")
+headers["Content-Type"] = "application/octet-stream"
 r = requests.post("http://127.0.0.1:5000/api/v1/jobs", headers=headers, data=open(file_path, "rb"))
 assert r.status_code == 200
