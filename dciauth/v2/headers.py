@@ -29,7 +29,7 @@ TIMESTAMP_FORMAT = "%Y%m%dT%H%M%SZ"
 DATESTAMP_FORMAT = "%Y%m%d"
 
 
-def generate_headers(request, credentials):
+def generate_headers(request, credentials, headers):
     access_key = credentials.get("access_key")
     secret_key = credentials.get("secret_key")
     if not access_key or not secret_key:
@@ -37,17 +37,18 @@ def generate_headers(request, credentials):
     if 'payload' in request:
         payload = request.pop('payload')
         request['data'] = json.dumps(payload)
-    authorization_header = _build_authorization_header(request, access_key, secret_key)
+    authorization_header = _build_authorization_header(request, access_key, secret_key, headers)
     return {
         "X-DCI-Date": _get_timestamp(request),
         "Authorization": authorization_header,
     }
 
 
-def _build_authorization_header(request, access_key, secret_key):
-    string_to_sign = _get_string_to_sign(request)
+def _build_authorization_header(request, access_key, secret_key, headers):
+    string_to_sign = _get_string_to_sign(request, headers)
     signing_key = _get_signing_key(request, secret_key)
     signature = hmac.new(signing_key, string_to_sign, hashlib.sha256).hexdigest()
+    # pylint: disable=line-too-long
     return """{algorithm} Credential={access_key}/{credential_scope}, SignedHeaders={signed_headers}, Signature={signature}""".format(
         algorithm=_get_algorithm(request),
         access_key=access_key,
@@ -55,9 +56,10 @@ def _build_authorization_header(request, access_key, secret_key):
         signed_headers=_get_signed_headers(request),
         signature=signature,
     )
+    # pylint: enable=line-too-long
 
 
-def _get_string_to_sign(request):
+def _get_string_to_sign(request, headers):
     string_to_sign = """{algorithm}
 {timestamp}
 {credential_scope}
@@ -65,12 +67,12 @@ def _get_string_to_sign(request):
         algorithm=_get_algorithm(request),
         timestamp=_get_timestamp(request),
         credential_scope=_get_credential_scope(request),
-        canonical_request=_get_canonical_request(request),
+        canonical_request=_get_canonical_request(request, headers),
     )
     return string_to_sign.encode("utf-8")
 
 
-def _get_canonical_request(request):
+def _get_canonical_request(request, headers):
     canonical_request = """{method}
 {endpoint}
 {canonical_querystring}
@@ -82,7 +84,7 @@ def _get_canonical_request(request):
         canonical_querystring=_get_canonical_querystring(request),
         canonical_headers=_get_canonical_headers(request),
         signed_headers=_get_signed_headers(request),
-        payload_hash=_get_payload_hash(request),
+        payload_hash=_get_payload_hash(request, headers),
     )
     return hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()
 
@@ -92,9 +94,11 @@ def _get_canonical_querystring(request):
     return urlencode(_order_dict(params)) if params else ""
 
 
-def _get_payload_hash(request):
+def _get_payload_hash(request, headers):
     data = request.get("data", "")
-    return hashlib.sha256(data.encode("utf-8")).hexdigest()
+    if headers['Content-Type'] != 'application/octet-stream':
+        return hashlib.sha256(data.encode("utf-8")).hexdigest()
+    return hashlib.sha256(data).hexdigest()
 
 
 def _get_canonical_headers(request):

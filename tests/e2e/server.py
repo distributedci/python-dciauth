@@ -52,6 +52,7 @@ def get_jobs():
             },
             {"secret_key": "secret"},
             parse_headers(request.headers),
+            request.headers
         )
         if not valid:
             raise Exception("Authentication failed: %s" % error_message)
