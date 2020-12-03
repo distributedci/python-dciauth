@@ -43,15 +43,19 @@ def get_jobs():
         if signature.is_expired():
             raise Exception("Authentication failed: signature expired")
     if algorithm == "DCI2-HMAC-SHA256":
+        data = request.data
+        if request.headers["Content-Type"] != "application/octet-stream":
+            data = data.decode("utf-8")
         valid, error_message = is_valid(
             {
                 "method": request.method,
                 "endpoint": request.path,
-                "data": request.data.decode("utf-8"),
+                "data": data,
                 "params": request.args.to_dict(flat=True),
             },
             {"secret_key": "secret"},
             parse_headers(request.headers),
+            request.headers
         )
         if not valid:
             raise Exception("Authentication failed: %s" % error_message)
