@@ -1,0 +1,73 @@
+{
+  "comments": [
+    {
+      "key": {
+        "uuid": "3d4db861_74bf8f41",
+        "filename": "dciauth/v2/headers.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 39,
+      "author": {
+        "id": 28
+      },
+      "writtenOn": "2020-12-04T14:41:36Z",
+      "side": 1,
+      "message": "this however should be utf-8 encoded, json.dumps returns a string, we should convert it to bytes.\n\nrequest[\u0027data\u0027] \u003d json.dumps(payload).encode(\"utf-8\")",
+      "range": {
+        "startLine": 39,
+        "startChar": 1,
+        "endLine": 39,
+        "endChar": 45
+      },
+      "revId": "bed75f2fd381f59f3bbb64415bf9b6dd0c0be65c",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "35e9540e_58885eec",
+        "filename": "dciauth/v2/headers.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 100,
+      "author": {
+        "id": 28
+      },
+      "writtenOn": "2020-12-04T14:41:36Z",
+      "side": 1,
+      "message": "encode should not need to be called here, the data should already be in binay form",
+      "range": {
+        "startLine": 99,
+        "startChar": 0,
+        "endLine": 100,
+        "endChar": 63
+      },
+      "revId": "bed75f2fd381f59f3bbb64415bf9b6dd0c0be65c",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    },
+    {
+      "key": {
+        "uuid": "f7cfd765_1713226a",
+        "filename": "tests/e2e/server.py",
+        "patchSetId": 4
+      },
+      "lineNbr": 48,
+      "author": {
+        "id": 28
+      },
+      "writtenOn": "2020-12-04T14:41:36Z",
+      "side": 1,
+      "message": "keep using binary data, don\u0027t decode into a string",
+      "range": {
+        "startLine": 47,
+        "startChar": 0,
+        "endLine": 48,
+        "endChar": 39
+      },
+      "revId": "bed75f2fd381f59f3bbb64415bf9b6dd0c0be65c",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0",
+      "unresolved": false
+    }
+  ]
+}
