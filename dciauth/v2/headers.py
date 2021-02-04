@@ -17,6 +17,7 @@
 import datetime
 import hashlib
 import hmac
+import logging
 import json
 from collections import OrderedDict
 
@@ -24,6 +25,8 @@ try:
     from urllib import urlencode
 except ImportError:
     from urllib.parse import urlencode
+
+logger = logging.getLogger(__name__)
 
 TIMESTAMP_FORMAT = "%Y%m%dT%H%M%SZ"
 DATESTAMP_FORMAT = "%Y%m%d"
@@ -39,17 +42,19 @@ def encode_data(data):
 def generate_headers(request, credentials):
     access_key = credentials.get("access_key")
     secret_key = credentials.get("secret_key")
+    logger.debug("Generate HMAC v2 headers for %s" % access_key)
     if not access_key or not secret_key:
         return {}
     if "payload" in request:
         payload = request.pop("payload")
         request["data"] = json.dumps(payload)
     request["data"] = encode_data(request.get("data"))
-    authorization_header = _build_authorization_header(request, access_key, secret_key)
-    return {
+    headers = {
         "X-DCI-Date": _get_timestamp(request),
-        "Authorization": authorization_header,
+        "Authorization": _build_authorization_header(request, access_key, secret_key),
     }
+    logger.debug("Generated headers %s" % json.dumps(headers, indent=2, sort_keys=True))
+    return headers
 
 
 def _build_authorization_header(request, access_key, secret_key):
@@ -77,6 +82,7 @@ def _get_string_to_sign(request):
         credential_scope=_get_credential_scope(request),
         canonical_request=_get_canonical_request(request),
     )
+    logger.debug("String to sign %s" % string_to_sign)
     return string_to_sign.encode("utf-8")
 
 
@@ -94,6 +100,7 @@ def _get_canonical_request(request):
         signed_headers=_get_signed_headers(request),
         payload_hash=_get_payload_hash(request),
     )
+    logger.debug("Canonical request %s" % canonical_request)
     return hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()
 
 
@@ -204,7 +211,7 @@ def parse_headers(headers):
     if len(credential) != 6:
         return None
     signed_headers = _find_in_str_between(signed_headers, "SignedHeaders=", ",")
-    return {
+    parsed_headers = {
         "host": headers.get("host"),
         "algorithm": algorithm,
         "client_type": credential[0],
@@ -218,6 +225,10 @@ def parse_headers(headers):
         "timestamp": timestamp,
         "signature": signature,
     }
+    logger.debug(
+        "Parsed headers %s" % json.dumps(parsed_headers, indent=2, sort_keys=True)
+    )
+    return parsed_headers
 
 
 def _parse_timestamp(headers):
