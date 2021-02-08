@@ -26,6 +26,8 @@ try:
 except ImportError:
     from urllib.parse import urlencode
 
+from dciauth.v2.time import get_now
+
 logger = logging.getLogger(__name__)
 
 TIMESTAMP_FORMAT = "%Y%m%dT%H%M%SZ"
@@ -49,8 +51,11 @@ def generate_headers(request, credentials):
         payload = request.pop("payload")
         request["data"] = json.dumps(payload)
     request["data"] = encode_data(request.get("data"))
+    now = get_now()
+    request["timestamp"] = request.get("timestamp", now.strftime(TIMESTAMP_FORMAT))
+    request["datestamp"] = request.get("datestamp", now.strftime(DATESTAMP_FORMAT))
     headers = {
-        "X-DCI-Date": _get_timestamp(request),
+        "X-DCI-Date": request["timestamp"],
         "Authorization": _build_authorization_header(request, access_key, secret_key),
     }
     logger.debug("Generated headers %s" % json.dumps(headers, indent=2, sort_keys=True))
@@ -78,7 +83,7 @@ def _get_string_to_sign(request):
 {credential_scope}
 {canonical_request}""".format(
         algorithm=_get_algorithm(request),
-        timestamp=_get_timestamp(request),
+        timestamp=request["timestamp"],
         credential_scope=_get_credential_scope(request),
         canonical_request=_get_canonical_request(request),
     )
@@ -119,7 +124,7 @@ def _get_canonical_headers(request):
         "canonical_headers",
         {
             "host": request.get("host", "api.distributed-ci.io"),
-            "x-dci-date": _get_timestamp(request),
+            "x-dci-date": request["timestamp"],
         },
     )
     signed_headers = _get_signed_headers(request)
@@ -133,7 +138,7 @@ def _get_canonical_headers(request):
 
 def _get_credential_scope(request):
     return """{datestamp}/{region}/{service}/{request_type}""".format(
-        datestamp=_get_datestamp(request),
+        datestamp=request["datestamp"],
         region=_get_region(request),
         service=_get_service(request),
         request_type=_get_request_type(request),
@@ -143,7 +148,7 @@ def _get_credential_scope(request):
 def _get_signing_key(request, key):
     algorithm = _get_algorithm(request)
     algo_version = algorithm.replace("-HMAC-SHA256", "")
-    datestamp = _get_datestamp(request)
+    datestamp = request["datestamp"]
     key_date = _sign((algo_version + key).encode("utf-8"), datestamp)
     region = _get_region(request)
     key_region = _sign(key_date, region)
@@ -155,20 +160,6 @@ def _get_signing_key(request, key):
 
 def _sign(key, msg):
     return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
-
-
-def _get_now(request):
-    return request.get("now", datetime.datetime.utcnow())
-
-
-def _get_datestamp(request):
-    now = _get_now(request)
-    return request.get("datestamp", now.strftime(DATESTAMP_FORMAT))
-
-
-def _get_timestamp(request):
-    now = _get_now(request)
-    return request.get("timestamp", now.strftime(TIMESTAMP_FORMAT))
 
 
 def _get_signed_headers(request):

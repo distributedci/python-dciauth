@@ -14,14 +14,17 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import mock
+
 from datetime import datetime
 from dciauth.v2.signature import is_valid
 from dciauth.v2.headers import parse_headers
 
 
-def test_signature_is_valid():
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_is_valid(get_now):
+    get_now.return_value = datetime(2017, 12, 15, 11, 19, 30)
     request = {
-        "now": datetime(2017, 12, 15, 11, 19, 30),
         "endpoint": "/api/v1/users",
         "params": {"limit": 100, "embed": "teams"},
     }
@@ -40,9 +43,10 @@ def test_signature_is_valid():
     assert is_valid(request, credential, headers)[0]
 
 
-def test_signature_is_valid_with_post_request():
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_is_valid_2(get_now):
+    get_now.return_value = datetime(2017, 12, 15, 11, 19, 30)
     request = {
-        "now": datetime(2017, 12, 15, 11, 19, 30),
         "method": "POST",
         "endpoint": "/api/v1/users",
         "data": '{"name": "foo"}',
@@ -62,9 +66,10 @@ def test_signature_is_valid_with_post_request():
     assert is_valid(request, credential, headers)[0]
 
 
-def test_signature_is_valid_with_put_request():
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_is_valid_with_put_request(get_now):
+    get_now.return_value = datetime(2017, 12, 15, 11, 19, 30)
     request = {
-        "now": datetime(2017, 12, 15, 11, 19, 30),
         "method": "PUT",
         "endpoint": "/api/v1/users",
         "data": '{"name": "foo"}',
@@ -84,9 +89,10 @@ def test_signature_is_valid_with_put_request():
     assert is_valid(request, credential, headers)[0]
 
 
-def test_signature_is_valid_with_delete_request():
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_is_valid_with_delete_request(get_now):
+    get_now.return_value = datetime(2017, 12, 15, 11, 19, 30)
     request = {
-        "now": datetime(2017, 12, 15, 11, 19, 30),
         "method": "DELETE",
         "endpoint": "/api/v1/users/ef837f60-87f4-4432-a249-b4977ec5bb45",
     }
@@ -105,8 +111,10 @@ def test_signature_is_valid_with_delete_request():
     assert is_valid(request, credential, headers)[0]
 
 
-def test_signature_aws4_is_valid():
-    request = {"now": datetime(2019, 10, 8, 12, 16, 59), "endpoint": "/api/v1/identity"}
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_aws4_is_valid(get_now):
+    get_now.return_value = datetime(2019, 10, 8, 12, 16, 59)
+    request = {"endpoint": "/api/v1/identity"}
     credential = {
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
@@ -127,7 +135,9 @@ def test_signature_aws4_is_valid():
     assert is_valid(request, credential, headers)[0]
 
 
-def test_signature_aws4_post_request_is_valid():
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_aws4_post_request_is_valid(get_now):
+    get_now.return_value = datetime(2019, 10, 21, 10, 56, 28)
     request = {
         "method": "POST",
         "now": datetime(2019, 10, 21, 10, 56, 28),
@@ -138,7 +148,7 @@ def test_signature_aws4_post_request_is_valid():
         "d4bcd2e2-98df-4962-b224-8d50eedaba1b"
     ],
     "topic_id": "c4171062-e2b4-4b60-9a5f-3e2fb32b4f68"
-}"""
+}""",
     }
     credential = {
         "access_key": "remoteci/79626298-a124-4e22-b5be-ec1a5e46fb41",
@@ -170,7 +180,9 @@ def test_signature_is_invalid_if_no_authorization():
     assert "headers are malformated" in error_message
 
 
-def test_signature_is_invalid_because_endpoint_changed():
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_is_invalid_because_endpoint_changed(get_now):
+    get_now.return_value = datetime(2017, 12, 15, 11, 19, 30)
     request = {"now": datetime(2017, 12, 15, 11, 19, 30), "endpoint": "/api/v1/users"}
     credential = {"access_key": "remoteci/ak", "secret_key": "sk"}
     headers = parse_headers(
@@ -188,12 +200,13 @@ def test_signature_is_invalid_because_endpoint_changed():
     assert "signature is invalid" in error_message
 
 
-def test_signature_is_expired():
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_is_expired(get_now):
     fifteen_min_and_one_sec_after = datetime(2017, 12, 15, 11, 34, 30)
+    get_now.return_value = fifteen_min_and_one_sec_after
     request = {
         "endpoint": "/api/v1/users",
         "params": {"limit": 100, "embed": "teams"},
-        "now": fifteen_min_and_one_sec_after,
     }
     credential = {
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
@@ -212,9 +225,10 @@ def test_signature_is_expired():
     assert "signature is expired" in error_message
 
 
-def test_signature_aws_is_expired():
-    fifteen_min_and_one_sec_after = datetime(2019, 10, 8, 12, 32, 0)
-    request = {"now": fifteen_min_and_one_sec_after, "endpoint": "/api/v1/identity"}
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_aws_is_expired(get_now):
+    get_now.return_value = datetime(2019, 10, 8, 12, 32, 0)
+    request = {"endpoint": "/api/v1/identity"}
     credential = {
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
@@ -237,12 +251,12 @@ def test_signature_aws_is_expired():
     assert "signature is expired" in error_message
 
 
-def test_signature_is_not_expired():
-    fifteen_min = datetime(2017, 12, 15, 11, 34, 29)
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_is_not_expired(get_now):
+    get_now.return_value = datetime(2017, 12, 15, 11, 34, 29)
     request = {
         "endpoint": "/api/v1/users",
         "params": {"limit": 100, "embed": "teams"},
-        "now": fifteen_min,
     }
     credential = {
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
@@ -259,9 +273,10 @@ def test_signature_is_not_expired():
     assert is_valid(request, credential, headers)[0]
 
 
-def test_signature_aws_is_not_expired():
-    fifteen_min = datetime(2019, 10, 8, 12, 31, 59)
-    request = {"now": fifteen_min, "endpoint": "/api/v1/identity"}
+@mock.patch("dciauth.v2.signature.get_now")
+def test_signature_aws_is_not_expired(get_now):
+    get_now.return_value = datetime(2019, 10, 8, 12, 31, 59)
+    request = {"endpoint": "/api/v1/identity"}
     credential = {
         "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
         "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",

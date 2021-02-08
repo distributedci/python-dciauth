@@ -6,7 +6,7 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-dciauth
-Version:        2.1.6
+Version:        2.1.7
 Release:        1%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
@@ -79,6 +79,9 @@ BuildRequires:  python3-setuptools
 %endif
 
 %changelog
+* Mon Feb 08 2021 Guillaume Vincent <gvincent@redhat.com> - 2.1.7-1
+- Use fixed timestamp to generate the signature
+
 * Mon Feb 08 2021 Guillaume Vincent <gvincent@redhat.com> - 2.1.6-1
 - Add logging
 
