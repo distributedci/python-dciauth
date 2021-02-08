@@ -14,6 +14,8 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
+import mock
+
 from datetime import datetime
 
 from dciauth.v2.headers import generate_headers
@@ -160,3 +162,19 @@ def test_generate_headers_with_claimed_stamps():
         "X-DCI-Date": "20171215T111929Z",
         "Authorization": "DCI2-HMAC-SHA256 Credential=remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5/20171215/BHS3/api/dci2_request, SignedHeaders=host;x-dci-date, Signature=ee6a1adfd78e47852b3b9daa1254849f0f4cce082de79de0957e53398c7946f8",
     }
+
+
+@mock.patch("dciauth.v2.headers.datetime.datetime")
+def test_nrt_utcnow_should_be_called_one_time_in_order_to_generate_the_appropriate_signature(mocked_datetime):
+    mocked_datetime.utcnow = mock.MagicMock(return_value=datetime(2020, 2, 8, 16, 12, 29))
+    request = {
+        "method": "GET",
+        "endpoint": "/api/v1/users"
+    }
+    credential = {
+        "access_key": "remoteci/464cc0a3-d638-4081-a69e-4c80261f3ba5",
+        "secret_key": "0nqAfEUJr3OWO8YnyjlGf2h2lrmz3MD343ECjyDTCr3lphcRND2cNESYuo5IXA8t",
+    }
+    generate_headers(request, credential)
+
+    assert mocked_datetime.utcnow.call_count == 1
