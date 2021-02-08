@@ -18,6 +18,7 @@ import hmac
 from datetime import datetime, timedelta
 
 from dciauth.v2.headers import generate_headers, TIMESTAMP_FORMAT, _lower
+from dciauth.v2.time import get_now
 
 
 def is_valid(request, credential, parsed_headers):
@@ -42,7 +43,7 @@ def is_expired(request, parsed_headers):
     timestamp = parsed_headers["timestamp"]
     if timestamp:
         timestamp = datetime.strptime(timestamp, TIMESTAMP_FORMAT)
-        now = request.get("now", datetime.utcnow())
+        now = get_now()
         fifteen_min = timedelta(minutes=15)
         return abs(now - timestamp) > fifteen_min
     return True
