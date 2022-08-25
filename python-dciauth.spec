@@ -7,7 +7,7 @@
 
 Name:           python-dciauth
 Version:        2.1.7
-Release:        2%{?dist}
+Release:        3%{?dist}
 Summary:        DCI authentication module used by dci-control-server and python-dciclient
 
 License:        ASL 2.0
@@ -79,6 +79,9 @@ BuildRequires:  python3-setuptools
 %endif
 
 %changelog
+* Thu Aug 25 2022 Frederic Lepied <flepied@redhat.com> 2.1.7-3
+- Rebuild for RHEL 9 (2nd try)
+
 * Wed Aug 24 2022 Frederic Lepied <flepied@redhat.com> - 2.1.7-2
 - Rebuild for RHEL 9
 
