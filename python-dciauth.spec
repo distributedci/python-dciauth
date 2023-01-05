@@ -1,84 +1,76 @@
 %if 0%{?rhel} && 0%{?rhel} < 8
-%global with_python2 1
-%else
-%global with_python3 1
+%global is_EL7 1
 %endif
+%global srcname dciauth
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
-Name:           python-dciauth
-Version:        2.1.7
-Release:        3%{?dist}
-Summary:        DCI authentication module used by dci-control-server and python-dciclient
+Name:           python-%{srcname}
+Version:        3.0.0
+Release:        1%{?dist}
+Summary:        %{summary}
 
 License:        ASL 2.0
-URL:            https://github.com/redhat-cip/python-dciauth
-Source0:        dciauth-%{version}.tar.gz
+URL:            https://github.com/redhat-cip/python-%{srcname}
+Source0:        %{srcname}-%{version}.tar.gz
 
 BuildArch:      noarch
 
 %description
 %{summary}
 
-%if 0%{?with_python2}
-%package -n python2-dciauth
+%if 0%{?is_EL7}
+%package -n python2-%{srcname}
 Summary: %{summary}
 BuildRequires:  python2-devel
 BuildRequires:  python2-setuptools
-%{?python_provide:%python_provide python2-dciauth}
+%{?python_provide:%python_provide python2-%{srcname}}
 
-%description -n python2-dciauth
+%description -n python2-%{srcname}
 %{summary}
 %endif
 
-%if 0%{?with_python3}
-%package -n python3-dciauth
+%package -n python3-%{srcname}
 Summary: %{summary}
 BuildRequires:  python3-devel
 BuildRequires:  python3-setuptools
-%{?python_provide:%python_provide python%{python3_pkgversion}-dciauth}
+%{?python_provide:%python_provide python3-%{srcname}}
 
-%description -n python3-dciauth
+%description -n python3-%{srcname}
 %{summary}
-%endif
 
 %prep
-%autosetup -n dciauth-%{version}
+%autosetup -n %{srcname}-%{version}
 
 %build
-%if 0%{?with_python2}
+%if 0%{?is_EL7}
 %py2_build
 %endif
-%if 0%{?with_python3}
 %py3_build
-%endif
 
 %install
-%if 0%{?with_python2}
-%py2_install
-%endif
-%if 0%{?with_python3}
 %py3_install
-%endif
+%if 0%{?is_EL7}
+%py2_install
 
-%if 0%{?with_python2}
-%files -n python2-dciauth
+%files -n python2-%{srcname}
 %license LICENSE
 %doc README.md
 %{python2_sitelib}/*.egg-info
-%dir %{python2_sitelib}/dciauth
-%{python2_sitelib}/dciauth/*
+%dir %{python2_sitelib}/%{srcname}
+%{python2_sitelib}/%{srcname}/*
 %endif
 
-%if 0%{?with_python3}
-%files -n python3-dciauth
+%files -n python3-%{srcname}
 %license LICENSE
 %doc README.md
 %{python3_sitelib}/*.egg-info
-%dir %{python3_sitelib}/dciauth
-%{python3_sitelib}/dciauth/*
-%endif
+%dir %{python3_sitelib}/%{srcname}
+%{python3_sitelib}/%{srcname}/*
 
 %changelog
+* Fri Jan 06 2023 Guillaume Vincent <gvincent@redhat.com> 3.0.0-1
+- Build also python3-dciauth on EL7
+
 * Thu Aug 25 2022 Frederic Lepied <flepied@redhat.com> 2.1.7-3
 - Rebuild for RHEL 9 (2nd try)
 
@@ -127,16 +119,16 @@ BuildRequires:  python3-setuptools
 * Mon Dec 18 2017 Guillaume Vincent <gvincent@redhat.com> 2.0.0-1
 - Revamp signature mechanism and copy AWS HMAC version 4 mechanism
 
-* Mon Nov 16 2017 Guillaume Vincent <gvincent@redhat.com> 1.0.1-1
+* Thu Nov 16 2017 Guillaume Vincent <gvincent@redhat.com> 1.0.1-1
 - Fix error in payload order
 
-* Mon Nov 15 2017 Guillaume Vincent <gvincent@redhat.com> 1.0.0-1
+* Wed Nov 15 2017 Guillaume Vincent <gvincent@redhat.com> 1.0.0-1
 - change calculate_signature API using params instead of query string
 
 * Mon Nov 13 2017 Guillaume Vincent <gvincent@redhat.com> 0.1.2-1
 - dummy patch
 
-* Mon Nov 9 2017 Guillaume Vincent <gvincent@redhat.com> 0.1.1-1
+* Thu Nov 9 2017 Guillaume Vincent <gvincent@redhat.com> 0.1.1-1
 - Fix signatures comparison on python 2
 
 * Mon Nov 6 2017 Guillaume Vincent <gvincent@redhat.com> 0.1.0-1
