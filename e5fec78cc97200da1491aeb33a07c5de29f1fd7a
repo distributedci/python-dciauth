@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "be5bd414_20ac2312",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 28
+      },
+      "writtenOn": "2023-01-06T09:56:51Z",
+      "side": 1,
+      "message": "We can\u0027t drop python2 support on el7 because ansible is only available with python2 on this platform.",
+      "revId": "e5fec78cc97200da1491aeb33a07c5de29f1fd7a",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0"
+    }
+  ]
+}
