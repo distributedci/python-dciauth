@@ -5,7 +5,7 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-%{srcname}
-Version:        3.0.0
+Version:        3.0.1
 Release:        1%{?dist}
 Summary:        %{summary}
 
@@ -68,6 +68,9 @@ BuildRequires:  python3-setuptools
 %{python3_sitelib}/%{srcname}/*
 
 %changelog
+* Tue Mar 21 2023 Guillaume Vincent <gvincent@redhat.com> 3.0.1-1
+- Unquote endpoint in generate headers function
+
 * Fri Jan 06 2023 Guillaume Vincent <gvincent@redhat.com> 3.0.0-1
 - Build also python3-dciauth on EL7
 

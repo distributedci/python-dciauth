@@ -21,9 +21,9 @@ import json
 from collections import OrderedDict
 
 try:
-    from urllib import urlencode
+    from urllib import urlencode, unquote
 except ImportError:
-    from urllib.parse import urlencode
+    from urllib.parse import urlencode, unquote
 
 from dciauth.v2.time import get_now
 
@@ -98,7 +98,7 @@ def _get_canonical_request(request):
 {signed_headers}
 {payload_hash}""".format(
         method=request.get("method", "GET"),
-        endpoint=request.get("endpoint", "/"),
+        endpoint=_get_endpoint(request),
         canonical_querystring=_get_canonical_querystring(request),
         canonical_headers=_get_canonical_headers(request),
         signed_headers=_get_signed_headers(request),
@@ -106,6 +106,10 @@ def _get_canonical_request(request):
     )
     logger.debug("Canonical request %s" % canonical_request)
     return hashlib.sha256(canonical_request.encode("utf-8")).hexdigest()
+
+
+def _get_endpoint(request):
+    return unquote(request.get("endpoint", "/"))
 
 
 def _get_canonical_querystring(request):

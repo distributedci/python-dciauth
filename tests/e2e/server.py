@@ -51,7 +51,26 @@ def get_jobs():
                 "params": request.args.to_dict(flat=True),
             },
             {"secret_key": "secret"},
-            parse_headers(request.headers)
+            parse_headers(request.headers),
+        )
+        if not valid:
+            raise Exception("Authentication failed: %s" % error_message)
+    return jsonify({"jobs": []})
+
+
+@app.route("/api/v1/files/<path:filepath>", methods=["GET"])
+def get_file(filepath):
+    algorithm = request.headers["Authorization"].split(" ")[0]
+    if algorithm == "DCI2-HMAC-SHA256":
+        valid, error_message = is_valid(
+            {
+                "method": request.method,
+                "endpoint": request.path,
+                "data": request.data,
+                "params": request.args.to_dict(flat=True),
+            },
+            {"secret_key": "secret"},
+            parse_headers(request.headers),
         )
         if not valid:
             raise Exception("Authentication failed: %s" % error_message)
