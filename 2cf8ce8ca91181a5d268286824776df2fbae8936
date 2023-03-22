@@ -16,6 +16,23 @@
       "message": "recheck",
       "revId": "2cf8ce8ca91181a5d268286824776df2fbae8936",
       "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "13f381e1_b322df1f",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 3
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 28
+      },
+      "writtenOn": "2023-03-22T20:13:58Z",
+      "side": 1,
+      "message": "recheck\n\nthe EL8 worker seems to have some problems doing the installation of the dependencies in mock",
+      "revId": "2cf8ce8ca91181a5d268286824776df2fbae8936",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0"
     }
   ]
 }
