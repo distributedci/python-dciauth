@@ -1,0 +1,8 @@
+Code-Review+2: Guillaume Vincent <gvincent@redhat.com>
+Workflow+1: Guillaume Vincent <gvincent@redhat.com>
+Verified+2: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-by: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-at: Wed, 26 Jul 2023 14:04:50 +0000
+Reviewed-on: https://softwarefactory-project.io/r/c/python-dciauth/+/28935
+Project: python-dciauth
+Branch: refs/heads/master
