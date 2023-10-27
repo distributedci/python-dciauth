@@ -6,7 +6,7 @@
 
 Name:           python-%{srcname}
 Version:        3.0.1
-Release:        1%{?dist}
+Release:        2.VERS%{?dist}
 Summary:        %{summary}
 
 License:        ASL 2.0
@@ -68,6 +68,9 @@ BuildRequires:  python3-setuptools
 %{python3_sitelib}/%{srcname}/*
 
 %changelog
+* Fri Oct 27 2023 Guillaume Vincent <gvincent@redhat.com> 3.0.1-2
+- Add missing version in package name
+
 * Tue Mar 21 2023 Guillaume Vincent <gvincent@redhat.com> 3.0.1-1
 - Unquote endpoint in generate headers function
 
