@@ -16,6 +16,24 @@
       "message": "You\u0027ll also need to merge this patchset too:  https://softwarefactory-project.io/r/c/dci-config/+/30033\n\nCan you share an example of breakage for analysis too ?",
       "revId": "5c7aae6b82a04ca83b40e3f1c888e99637d253c1",
       "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0"
+    },
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "375285e3_62418205",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 20
+      },
+      "writtenOn": "2023-11-06T13:04:28Z",
+      "side": 1,
+      "message": "\u003e You\u0027ll also need to merge this patchset too:  https://softwarefactory-project.io/r/c/dci-config/+/30033\n\u003e \n\u003e Can you share an example of breakage for analysis too ?\n\nIt is breaking here: https://softwarefactory-project.io/zuul/t/local/build/48ceb85ba7644f74a67f5677805e1352",
+      "parentUuid": "a6ea3fde_8dcbb5ca",
+      "revId": "5c7aae6b82a04ca83b40e3f1c888e99637d253c1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0"
     }
   ]
 }
