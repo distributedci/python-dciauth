@@ -1,0 +1,21 @@
+{
+  "comments": [
+    {
+      "unresolved": false,
+      "key": {
+        "uuid": "a6ea3fde_8dcbb5ca",
+        "filename": "/PATCHSET_LEVEL",
+        "patchSetId": 1
+      },
+      "lineNbr": 0,
+      "author": {
+        "id": 166
+      },
+      "writtenOn": "2023-11-06T11:31:02Z",
+      "side": 1,
+      "message": "You\u0027ll also need to merge this patchset too:  https://softwarefactory-project.io/r/c/dci-config/+/30033\n\nCan you share an example of breakage for analysis too ?",
+      "revId": "5c7aae6b82a04ca83b40e3f1c888e99637d253c1",
+      "serverId": "6c1dc8ef-8b94-40e4-bd83-c2359d45ecc0"
+    }
+  ]
+}
