@@ -5,13 +5,13 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-%{srcname}
-Version:        SEMVER
+Version:        3.0.1
 Release:        2.VERS%{?dist}
 Summary:        %{summary}
 
 License:        ASL 2.0
 URL:            https://github.com/redhat-cip/python-%{srcname}
-Source0:        %{srcname}-%{version}.devDATE.tar.gz
+Source0:        %{srcname}-%{version}.tar.gz
 
 BuildArch:      noarch
 
@@ -39,7 +39,7 @@ BuildRequires:  python3-setuptools
 %{summary}
 
 %prep
-%autosetup -n %{srcname}-%{version}.devDATE
+%autosetup -n %{srcname}-%{version}
 
 %build
 %if 0%{?is_EL7}
