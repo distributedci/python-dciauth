@@ -5,13 +5,13 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-%{srcname}
-Version:        3.0.1
-Release:        2.VERS%{?dist}
+Version:        SEMVER
+Release:        1.VERS%{?dist}
 Summary:        %{summary}
 
 License:        ASL 2.0
 URL:            https://github.com/redhat-cip/python-%{srcname}
-Source0:        %{srcname}-%{version}.tar.gz
+Source0:        %{srcname}-%{version}.postDATE.tar.gz
 
 BuildArch:      noarch
 
@@ -39,7 +39,7 @@ BuildRequires:  python3-setuptools
 %{summary}
 
 %prep
-%autosetup -n %{srcname}-%{version}
+%autosetup -n %{srcname}-%{version}.postDATE
 
 %build
 %if 0%{?is_EL7}
@@ -68,6 +68,9 @@ BuildRequires:  python3-setuptools
 %{python3_sitelib}/%{srcname}/*
 
 %changelog
+* Tue Nov  7 2023 Frederic Lepied <flepied@redhat.com> 3.0.2-1
+- use the new build process compatible with PEP-0440
+
 * Fri Oct 27 2023 Guillaume Vincent <gvincent@redhat.com> 3.0.1-2
 - Add missing version in package name
 
