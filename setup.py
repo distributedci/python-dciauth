@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Red Hat, Inc.
+# Copyright 2017-2023 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the 'License'); you may
 # not use this file except in compliance with the License. You may obtain
@@ -16,15 +16,27 @@
 # under the License.
 import os
 import setuptools
+import subprocess
 
-from dciauth import version
+# dcibuild can be loaded only when doing the sdist sub-command because
+# dci-packaging is extracted at the same level. When doing the other
+# sub-commands like build, we extract the version from version.py.
+try:
+    from dcibuild import sdist, get_version
+    sdist.dci_mod = "dciauth"
+except:
+    from setuptools.command.sdist import sdist
+    def get_version():
+        from dciauth import version
+        return version.__version__
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 readme = open(os.path.join(root_dir, "README.md")).read()
 
+
 setuptools.setup(
     name="dciauth",
-    version=version.__version__,
+    version=get_version(),
     packages=["dciauth", "dciauth.v2"],
     author="Distributed CI team",
     author_email="distributed-ci@redhat.com",
@@ -43,4 +55,7 @@ setuptools.setup(
         "Programming Language :: Python :: 3",
         "Topic :: Security :: Cryptography",
     ],
+    cmdclass={
+        "sdist": sdist,
+    },
 )
