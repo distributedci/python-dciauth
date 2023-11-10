@@ -23,12 +23,16 @@ import subprocess
 # sub-commands like build, we extract the version from version.py.
 try:
     from dcibuild import sdist, get_version
+
     sdist.dci_mod = "dciauth"
 except:
-    from setuptools.command.sdist import sdist
+    sdist = None
+
     def get_version():
         from dciauth import version
+
         return version.__version__
+
 
 root_dir = os.path.dirname(os.path.abspath(__file__))
 readme = open(os.path.join(root_dir, "README.md")).read()
