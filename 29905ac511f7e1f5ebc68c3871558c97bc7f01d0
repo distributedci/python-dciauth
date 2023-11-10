@@ -1,0 +1,9 @@
+Workflow+1: Frederic Lepied <flepied@redhat.com>
+Verified+2: Zuul CI <zuul@softwarefactory-project.io>
+Verified+1: dci-ci-bot <dci-ci-bot@redhat.com>
+Code-Review+2: Frederic Lepied <flepied@redhat.com>
+Submitted-by: Zuul CI <zuul@softwarefactory-project.io>
+Submitted-at: Fri, 10 Nov 2023 14:54:57 +0000
+Reviewed-on: https://softwarefactory-project.io/r/c/python-dciauth/+/30085
+Project: python-dciauth
+Branch: refs/heads/master
