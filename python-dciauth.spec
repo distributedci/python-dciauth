@@ -5,7 +5,7 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-%{srcname}
-Version:        3.0.2
+Version:        4.0.0
 Release:        1.VERS%{?dist}
 Summary:        %{summary}
 
@@ -68,7 +68,11 @@ BuildRequires:  python3-setuptools
 %{python3_sitelib}/%{srcname}/*
 
 %changelog
-* Tue Nov  7 2023 Frederic Lepied <flepied@redhat.com> 3.0.2-1
+* Wed Oct 23 2024 Guillaume Vincent <gvincent@redhat.com> 4.0.0-1
+- Add a new implementation for generating headers and validating requests
+- v1 has been migrated to the new 
+
+* Tue Nov 07 2023 Frederic Lepied <flepied@redhat.com> 3.0.2-1
 - use the new build process compatible with PEP-0440
 
 * Fri Oct 27 2023 Guillaume Vincent <gvincent@redhat.com> 3.0.1-2

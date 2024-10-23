@@ -17,8 +17,8 @@
 from flask import Flask
 from flask import request
 from flask import jsonify
-from dciauth.signature import Signature
-from dciauth.request import AuthRequest
+from dciauth.v1.signature import Signature
+from dciauth.v1.request import AuthRequest
 from dciauth.v2.signature import is_valid
 from dciauth.v2.headers import parse_headers
 
@@ -78,4 +78,4 @@ def get_file(filepath):
 
 
 if __name__ == "__main__":
-    app.run()
+    app.run(port=65432)

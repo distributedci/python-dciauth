@@ -1,7 +1,7 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 #
-# Copyright 2017 Red Hat, Inc.
+# Copyright 2017-2024 Red Hat, Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the 'License'); you may
 # not use this file except in compliance with the License. You may obtain
@@ -14,98 +14,288 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-import datetime
+import functools
 import hashlib
 import hmac
+import json
+import logging
+
+from datetime import datetime, timedelta, timezone
+
+from requests.auth import AuthBase
+from urllib.parse import unquote
+from urllib.parse import quote
+from urllib.parse import parse_qsl
+from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 
-class Signature(object):
-    def __init__(self, request, now=None):
-        """
-        dciauth Signature object implementing AWS HMAC version 4 mechanism.
+TIMESTAMP_FORMAT = "%Y%m%dT%H%M%SZ"
 
-        :param request (AuthRequest): dciauth AuthRequest object
-        :param now (datetime): datetime used in Signature algorithm (default: datetime.utcnow())
-        """
 
-        self.request = request
-        self.now = now or datetime.datetime.utcnow()
-        self.dci_date_format = '%Y%m%d'
-        self.dci_date_str = self.now.strftime(self.dci_date_format)
-        self.dci_datetime_format = '%Y%m%dT%H%M%SZ'
-        self.dci_datetime_str = self.now.strftime(self.dci_datetime_format)
-        self.dci_datetime_header = 'dci-datetime'
+class BaseHmacSignature:
+    def __init__(self, options, now=None):
+        self.now = datetime.now(timezone.utc) if now is None else now
+        self.error_message = ""
+        self.algorithm = options["algorithm"]
+        self.service_name = options["service_name"]
+        self.service_key = options["service_key"]
+        self.region_name = options["region_name"]
+        date_headers = {
+            "aws4_request": "x-amz-date",
+            "dci2_request": "x-dci-date",
+        }
+        self.date_header = date_headers[self.service_key]
 
-    def generate_headers(self, client_type, client_id, secret):
-        """
-        generate_headers is used to generate the headers automatically for your http request
+    def add_request(self, request):
+        logger.debug("Calculating signature using v4 auth.")
+        self.parse_request(request)
+        self.canonical_request = self._get_canonical_request()
+        logger.debug(f"Canonical request:\n{self.canonical_request}")
+        self.string_to_sign = self._get_string_to_sign()
+        logger.debug(f"String to sign:\n{self.string_to_sign}")
+        return self
 
-        :param client_type (str): remoteci or feeder
-        :param client_id (str): remoteci or feeder id
-        :param secret (str): api secret
-        :return: Authorization headers (dict)
-        """
+    def parse_request(self, request):
+        raise NotImplementedError
 
-        self.request.add_header(self.dci_datetime_header, self.dci_datetime_str)
-        signature = self._sign(secret)
-        return self.request.build_headers(client_type, client_id, signature)
+    def _get_canonical_querystring(self, args):
+        key_val_pairs = []
+        for key, value in args.items():
+            key_val_pairs.append(
+                (quote(key, safe="_.-~"), quote(str(value), safe="_.-~"))
+            )
 
-    def is_valid(self, secret):
-        dci_datetime_str = self.request.headers[self.dci_datetime_header]
-        self._update_dci_dates(dci_datetime_str)
-        signature = self._sign(secret)
-        client_signature = self.request.get_client_info()['signature']
-        return self._equals(signature, client_signature)
+        sorted_key_vals_pairs = []
+        for key, value in sorted(key_val_pairs):
+            sorted_key_vals_pairs.append(f"{key}={value}")
+        canonical_query_string = "&".join(sorted_key_vals_pairs)
+        return canonical_query_string
 
-    def is_expired(self, hours=24):
-        timestamp = self.request.headers.get(self.dci_datetime_header)
-        if timestamp:
-            timestamp = datetime.datetime.strptime(timestamp, self.dci_datetime_format)
-            return abs(self.now - timestamp) > datetime.timedelta(hours=hours)
-        return False
+    def _get_canonical_headers(self, headers_to_sign):
+        headers = []
+        for key in sorted(headers_to_sign):
+            value = " ".join(headers_to_sign[key].split())
+            headers.append(f"{key}:{value}")
+        return "\n".join(headers)
 
-    def _create_canonical_request(self):
-        payload_hash = hashlib.sha256(self.request.get_payload_string().encode('utf-8')).hexdigest()
-        return """{method}
-{endpoint}
-{query_string}
-{headers_string}
-{signed_headers}
-{payload_hash}""".format(method=self.request.method,
-                         endpoint=self.request.endpoint,
-                         query_string=self.request.get_query_string(),
-                         headers_string=self.request.get_headers_string(),
-                         signed_headers=self.request.get_signed_headers_string(),
-                         payload_hash=payload_hash)
+    def _get_signed_headers(self, headers_to_sign):
+        headers = sorted(headers_to_sign)
+        return ";".join(headers)
 
-    def _create_string_to_sign(self):
-        canonical_request = self._create_canonical_request()
-        canonical_request_hash = hashlib.sha256(canonical_request.encode('utf-8')).hexdigest()
-        return """{dci_algorithm}
-{dci_datetime}
-{dci_date}
-{canonical_request_hash}""".format(dci_algorithm=self.request.algorithm,
-                                   dci_datetime=self.dci_datetime_str,
-                                   dci_date=self.dci_date_str,
-                                   canonical_request_hash=canonical_request_hash)
+    def _encode_data(self, data):
+        try:
+            return (data or "").encode("utf-8")
+        except (UnicodeDecodeError, AttributeError):
+            return data
 
-    def _sign(self, secret):
-        string_to_sign = self._create_string_to_sign()
-        signing_key = hmac.new(
-            secret.encode('utf-8'),
-            self.dci_date_str.encode('utf-8'),
-            hashlib.sha256
-        ).digest()
-        return hmac.new(signing_key, string_to_sign.encode('utf-8'), hashlib.sha256).hexdigest()
+    def _get_payload(self, data):
+        data = self._encode_data(data)
+        if data and hasattr(data, "seek"):
+            position = data.tell()
+            performant_payload_buffer = 1024 * 1024
+            read_chunksize = functools.partial(data.read, performant_payload_buffer)
+            checksum = hashlib.sha256()
+            for chunk in iter(read_chunksize, b""):
+                checksum.update(chunk)
+            hex_checksum = checksum.hexdigest()
+            data.seek(position)
+            return hex_checksum
+        return hashlib.sha256(data).hexdigest()
 
-    @staticmethod
-    def _equals(client_signature, header_signature):
+    def _get_canonical_request(self):
+        canonical_request = [
+            self.method,
+            unquote(self.path),
+            self._get_canonical_querystring(self.params),
+            self._get_canonical_headers(self.headers_to_sign) + "\n",
+            self._get_signed_headers(self.headers_to_sign),
+            self._get_payload(self.data),
+        ]
+        return "\n".join(canonical_request)
+
+    def _get_credential_scope(self):
+        credential_scope = [
+            self.timestamp[0:8],
+            self.region_name,
+            self.service_name,
+            self.service_key,
+        ]
+        return "/".join(credential_scope)
+
+    def _hash_sha256(self, msg):
+        return hashlib.sha256(msg.encode("utf-8")).hexdigest()
+
+    def _get_string_to_sign(self):
+        string_to_sign = [
+            self.algorithm,
+            self.timestamp,
+            self._get_credential_scope(),
+            self._hash_sha256(self.canonical_request),
+        ]
+        return "\n".join(string_to_sign)
+
+    def _sign_hex(self, key, msg):
+        return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).hexdigest()
+
+    def _sign(self, key, msg):
+        return hmac.new(key, msg.encode("utf-8"), hashlib.sha256).digest()
+
+    def _get_signature(self, secret_key):
+        algo_version = self.algorithm.replace("-HMAC-SHA256", "")
+        k_date = self._sign(
+            (f"{algo_version}{secret_key}").encode("utf-8"), self.timestamp[0:8]
+        )
+        k_region = self._sign(k_date, self.region_name)
+        k_service = self._sign(k_region, self.service_name)
+        k_signing = self._sign(k_service, self.service_key)
+        return self._sign_hex(k_signing, self.string_to_sign)
+
+    def _signature_equals(self, signature1, signature2):
         return hmac.compare_digest(
-            client_signature.encode('utf-8'),
-            header_signature.encode('utf-8')
+            signature1.encode("utf-8"), signature2.encode("utf-8")
         )
 
-    def _update_dci_dates(self, dci_datetime_str):
-        dci_datetime = datetime.datetime.strptime(dci_datetime_str, self.dci_datetime_format)
-        self.dci_date_str = dci_datetime.strftime(self.dci_date_format)
-        self.dci_datetime_str = dci_datetime.strftime(self.dci_datetime_format)
+
+class FlaskHmacSignature(BaseHmacSignature):
+    def parse_request(self, request):
+        self.parse_headers(request.headers)
+        self.method = request.method.upper()
+        self.path = request.path
+        self.params = request.args
+        self.data = request.data
+
+    def parse_headers(self, headers):
+        logger.debug(f"Request headers:\n{headers}")
+        lower_headers = {key.lower(): value for key, value in headers.items()}
+        for key, value in lower_headers.items():
+            value = value.strip()
+            if key == self.date_header:
+                self.timestamp = value
+            if key == "authorization":
+                _, credential, signed_headers, signature = value.split(" ")
+                credential = (
+                    credential.replace("Credential=", "").replace(",", "").split("/")
+                )
+                if len(credential) < 5:
+                    raise Exception("Credential invalid")
+                self.access_key = "/".join(credential[:-4])
+                signed_headers = [
+                    h.lower().strip()
+                    for h in signed_headers.replace("SignedHeaders=", "")
+                    .replace(",", "")
+                    .split(";")
+                ]
+                self.headers_to_sign = {
+                    h: lower_headers[h] for h in set(signed_headers)
+                }
+                self.signature_in_header = signature.replace("Signature=", "")
+
+    def is_expired(self):
+        if self.timestamp:
+            timestamp = datetime.strptime(self.timestamp, TIMESTAMP_FORMAT)
+            timestamp = timestamp.replace(tzinfo=timezone.utc)
+            fifteen_min = timedelta(minutes=15)
+            return abs(self.now - timestamp) > fifteen_min
+        return True
+
+    def is_valid(self, secret_key):
+        if self.is_expired():
+            self.error_message = "signature is expired"
+            return False
+        signatures_equals = self._signature_equals(
+            self._get_signature(secret_key), self.signature_in_header
+        )
+        if not signatures_equals:
+            self.error_message = "signature invalid"
+        return signatures_equals
+
+
+class HmacSignature(BaseHmacSignature):
+    def parse_request(self, request):
+        self.timestamp = datetime.strftime(self.now, TIMESTAMP_FORMAT)
+        self.headers_to_sign = {
+            "host": request["host"],
+            self.date_header: self.timestamp,
+        }
+        self.method = request["method"]
+        self.path = request["path"]
+        self.params = request["params"]
+        if "json" in request and request["json"]:
+            self.data = json.dumps(request["json"])
+        else:
+            self.data = request.get("data", "")
+        self.host = request["host"]
+
+    def generate_headers(self, credentials):
+        self.access_key = credentials["access_key"]
+        signature = self._get_signature(credentials["secret_key"])
+
+        authorization_header = [
+            f"{self.algorithm} Credential={self.access_key}/{self._get_credential_scope()}"
+        ]
+        authorization_header.append(
+            f"SignedHeaders={self._get_signed_headers(self.headers_to_sign)}"
+        )
+        authorization_header.append("Signature=%s" % signature)
+        return {
+            "host": self.host,
+            self.date_header: self.timestamp,
+            "authorization": ", ".join(authorization_header),
+        }
+
+
+class HmacAuthBase(AuthBase):
+    """Extend AuthBase from python requests with HMAC authentication"""
+
+    def __init__(
+        self,
+        access_key,
+        secret_key,
+        service,
+        region,
+        service_key="dci2_request",
+        algorithm="DCI2-HMAC-SHA256",
+    ):
+        self.access_key = access_key
+        self.secret_key = secret_key
+        self.service = service
+        self.region = region
+        self.service_key = service_key
+        self.algorithm = algorithm
+
+    def __call__(self, r):
+        url = urlparse(r.url)
+        signature = HmacSignature(
+            {
+                "service_name": self.service,
+                "service_key": self.service_key,
+                "region_name": self.region,
+                "algorithm": self.algorithm,
+            }
+        ).add_request(
+            {
+                "method": r.method,
+                "params": dict(parse_qsl(url.query)),
+                "data": self.get_body(r.body),
+                "host": url.netloc,
+                "path": url.path,
+            }
+        )
+        r.headers.update(
+            signature.generate_headers(
+                {
+                    "access_key": self.access_key,
+                    "secret_key": self.secret_key,
+                },
+            )
+        )
+        return r
+
+    def get_body(self, body):
+        if hasattr(body, "read"):
+            c = body.read()
+            body.seek(0)
+            return c
+        return body

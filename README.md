@@ -4,21 +4,29 @@ DCI authentication module used by dci-control-server and python-dciclient
 
 This section shows example programs written in python that illustrate how to work with Signature Version 2 in DCI. The algorithm used by dciauth is identical to [Signature Version 4 in AWS](http://docs.aws.amazon.com/general/latest/gr/sigv4-signed-request-examples.html).
 
-
 ## Authentication example:
+
+Create a `HmacAuthBase` object to give to python requests module
+
+```python
+from dciauth.signature import HmacAuthBase
+
+auth = HmacAuthBase(
+    access_key="access_key",
+    secret_key="secret_key",
+    region="us-east-1",
+    service="api",
+    service_key="aws4_request",
+    algorithm="AWS4-HMAC-SHA256",
+)
+```
 
 GET
 
 ```python
 import requests
 
-from dciauth.v2.headers import generate_headers
-
-headers = generate_headers(
-    {"endpoint": "/api/v1/jobs"},
-    {"access_key": "remoteci/client_id", "secret_key": "secret"},
-)
-requests.get("http://api.distributed-ci.io/api/v1/jobs", headers=headers)
+requests.get("http://api.distributed-ci.io/api/v1/jobs", auth=auth)
 ```
 
 POST
@@ -26,40 +34,32 @@ POST
 ```python
 import requests
 
-from dciauth.v2.headers import generate_headers
-
-data = {"name": "user 1"}
-headers = generate_headers(
-    {
-        "method": "POST",
-        "endpoint": "http://api.distributed-ci.io/api/v1/users",
-        "data": data,
-    },
-    {"access_key": "remoteci/client_id", "secret_key": "secret"},
-)
-requests.post("http://api.distributed-ci.io/api/v1/users", headers=headers, json=data)
+requests.post("http://api.distributed-ci.io/api/v1/users", auth=auth, json={"name": "user 1"})
 ```
 
 ## Validation example
 
 ```python
-    from flask import request
+import flask
+from dciauth.signature import FlaskHmacSignature
 
-    from dciauth.v2.headers import parse_headers
-    from dciauth.v2.signature import is_valid
-
-    valid, error_message = is_valid(
-        {
-            "method": request.method,
-            "endpoint": request.path,
-            "data": request.data,
-            "params": request.args.to_dict(flat=True),
-        },
-        {"secret_key": "secret"},
-        parse_headers(request.headers),
-    )
-    if not valid:
-        raise Exception("Authentication failed: %s" % error_message)
+@app.route("/api/protected", methods=["GET"])
+def get_protected():
+    auth_scheme = flask.request.headers.get("Authorization").split(" ")[0]
+    if auth_scheme == "AWS4-HMAC-SHA256":
+        signature = FlaskHmacSignature(
+            {
+                "service_name": "api",
+                "service_key": "aws4_request",
+                "region_name": "us-east-1",
+                "algorithm": "AWS4-HMAC-SHA256",
+            }
+        ).add_request(flask.request)
+        assert signature.access_key == "access_key"
+        if not signature.is_valid(secret_key="secret_key"):
+            return "ko", 401
+        return "ok", 200
+    return "ko", 400
 ```
 
 ## Using POSTMAN
