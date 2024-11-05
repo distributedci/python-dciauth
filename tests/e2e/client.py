@@ -18,64 +18,11 @@ import json
 import os
 import requests
 
+from botocore.auth import SigV4Auth
+from botocore.awsrequest import AWSRequest
+
 from dciauth.signature import HmacAuthBase
-from dciauth.v1.signature import Signature
-from dciauth.v1.request import AuthRequest
 from dciauth.v2.headers import generate_headers
-
-# #################### TEST HMAC V1 #################################
-
-auth_request = AuthRequest(endpoint="/api/v1/jobs")
-headers = Signature(request=auth_request).generate_headers(
-    "remoteci", "client_id", "secret"
-)
-r = requests.get("http://127.0.0.1:65432/api/v1/jobs", headers=headers)
-assert r.status_code == 200
-
-auth_request = AuthRequest(endpoint="/api/v1/jobs", params={"limit": 100})
-headers = Signature(request=auth_request).generate_headers(
-    "remoteci", "client_id", "secret"
-)
-r = requests.get(
-    "http://127.0.0.1:65432/api/v1/jobs", params={"limit": 100}, headers=headers
-)
-assert r.status_code == 200
-
-payload = {"bar": "I'm ❤ bar"}
-auth_request = AuthRequest(
-    method="POST",
-    endpoint="/api/v1/jobs",
-    payload=payload,
-    headers={"content-type": "application/json"},
-)
-headers = Signature(request=auth_request).generate_headers(
-    "remoteci", "client_id", "secret"
-)
-r = requests.post("http://127.0.0.1:65432/api/v1/jobs", headers=headers, json=payload)
-assert r.status_code == 200
-
-auth_request = AuthRequest(
-    method="POST", endpoint="/api/v1/jobs", headers={"content-type": "application/json"}
-)
-headers = Signature(request=auth_request).generate_headers(
-    "remoteci", "client_id", "secret"
-)
-file_path = os.path.join(os.path.dirname(__file__), "test.txt")
-files = {"file": open(file_path, "rb")}
-r = requests.post("http://127.0.0.1:65432/api/v1/jobs", headers=headers, files=files)
-assert r.status_code == 200
-
-auth_request = AuthRequest(
-    method="POST", endpoint="/api/v1/jobs", headers={"content-type": "application/json"}
-)
-headers = Signature(request=auth_request).generate_headers(
-    "remoteci", "client_id", "secret"
-)
-file_path = os.path.join(os.path.dirname(__file__), "nrt.json")
-r = requests.post(
-    "http://127.0.0.1:65432/api/v1/jobs", headers=headers, data=open(file_path, "rb")
-)
-assert r.status_code == 200
 
 
 # #################### TEST HMAC V2 #################################
@@ -179,4 +126,38 @@ auth = HmacAuthBase(
     algorithm="DCI2-HMAC-SHA256",
 )
 response = requests.get("http://127.0.0.1:65432/api/v1/jobs", auth=auth)
+assert response.status_code == 200
+
+# #################### TEST AWS #################################
+
+
+class Credentials:
+    token = None
+
+    def __init__(self, access_key, secret_key):
+        self.access_key = access_key
+        self.secret_key = secret_key
+
+
+# nrt space in params not escaped correctly
+
+params = {
+    "query": "((components.type=ocp) and (components.version=~4.14.30*))",
+    "offset": "1",
+    "limit": "2",
+    "sort": "-created_at",
+}
+request = AWSRequest(
+    "GET",
+    "/api/v1/jobs",
+    params=params,
+    headers={"Host": "127.0.0.1"},
+)
+SigV4Auth(Credentials("remoteci/access_key", "secret"), "api", "BHS3").add_auth(request)
+
+response = requests.get(
+    "http://127.0.0.1:65432/api/v1/jobs",
+    params=params,
+    headers=request.headers,
+)
 assert response.status_code == 200

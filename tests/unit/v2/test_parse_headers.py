@@ -14,7 +14,7 @@
 # WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
 # License for the specific language governing permissions and limitations
 # under the License.
-from dciauth.v2.headers import parse_headers
+from dciauth.v2.headers import _get_canonical_querystring, parse_headers
 
 
 def test_parse_header():
@@ -28,6 +28,7 @@ def test_parse_header():
         "signed_headers": "host;x-dci-date",
         "service": "api",
         "datestamp": "20171215",
+        "date_header": "X-DCI-Date",
         "canonical_headers": {
             "x-dci-date": "20171215T111929Z",
             "host": "api.distributed-ci.io",
@@ -54,6 +55,7 @@ def test_parse_header_ignore_case():
         "signed_headers": "host;x-dci-date",
         "service": "api",
         "datestamp": "20171215",
+        "date_header": "X-DCI-Date",
         "canonical_headers": {
             "x-dci-date": "20171215T111929Z",
             "host": "api.distributed-ci.io",
@@ -114,4 +116,20 @@ def test_parse_header_return_none_if_timestamp_header_unknown():
             }
         )["timestamp"]
         == "20171215T111929Z"
+    )
+
+
+def test_nrt_get_canonical_querystring_escape_space():
+    assert (
+        _get_canonical_querystring(
+            {
+                "params": {
+                    "query": "((components.type=ocp) and (components.version=~4.14.30*))",
+                    "offset": "1",
+                    "limit": "2",
+                    "sort": "-created_at",
+                }
+            }
+        )
+        == "limit=2&offset=1&query=%28%28components.type%3Docp%29%20and%20%28components.version%3D~4.14.30%2A%29%29&sort=-created_at"
     )

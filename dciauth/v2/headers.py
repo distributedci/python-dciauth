@@ -18,12 +18,9 @@ import hashlib
 import hmac
 import logging
 import json
-from collections import OrderedDict
 
-try:
-    from urllib import urlencode, unquote
-except ImportError:
-    from urllib.parse import urlencode, unquote
+from urllib.parse import unquote
+from urllib.parse import quote
 
 from dciauth.v2.time import get_now
 
@@ -53,8 +50,9 @@ def generate_headers(request, credentials):
     now = get_now()
     request["timestamp"] = request.get("timestamp", now.strftime(TIMESTAMP_FORMAT))
     request["datestamp"] = request.get("datestamp", now.strftime(DATESTAMP_FORMAT))
+    date_header = request.get("date_header", "X-DCI-Date")
     headers = {
-        "X-DCI-Date": request["timestamp"],
+        date_header: request["timestamp"],
         "Authorization": _build_authorization_header(request, access_key, secret_key),
     }
     logger.debug("Generated headers %s" % json.dumps(headers, indent=2, sort_keys=True))
@@ -114,7 +112,17 @@ def _get_endpoint(request):
 
 def _get_canonical_querystring(request):
     params = request.get("params")
-    return urlencode(_order_dict(params)) if params else ""
+    if not params:
+        return ""
+
+    key_val_pairs = []
+    for key, value in params.items():
+        key_val_pairs.append((quote(key, safe="_.-~"), quote(str(value), safe="_.-~")))
+
+    sorted_key_vals_pairs = []
+    for key, value in sorted(key_val_pairs):
+        sorted_key_vals_pairs.append(f"{key}={value}")
+    return "&".join(sorted_key_vals_pairs)
 
 
 def _get_payload_hash(request):
@@ -185,10 +193,6 @@ def _get_request_type(request):
     return request.get("request_type", "dci2_request")
 
 
-def _order_dict(dictionary):
-    return OrderedDict(sorted(dictionary.items(), key=lambda k: k[0]))
-
-
 def _lower(headers):
     return {key.lower(): value for key, value in headers.items()}
 
@@ -205,15 +209,23 @@ def parse_headers(headers):
     if len(credential) != 6:
         return None
     signed_headers = _find_in_str_between(signed_headers, "SignedHeaders=", ",")
+    request_type = credential[5]
+    date_headers = {
+        "aws4_request": "X-Amz-Date",
+        "dci2_request": "X-DCI-Date",
+    }
+    if request_type not in date_headers.keys():
+        return None
     parsed_headers = {
         "host": headers.get("host"),
         "algorithm": algorithm,
         "client_type": credential[0],
         "client_id": credential[1],
         "datestamp": credential[2],
+        "date_header": date_headers[request_type],
         "region": credential[3],
         "service": credential[4],
-        "request_type": credential[5],
+        "request_type": request_type,
         "signed_headers": signed_headers,
         "canonical_headers": {h: headers[h] for h in signed_headers.split(";")},
         "timestamp": timestamp,
