@@ -5,3 +5,4 @@ freezegun
 flask
 requests
 mock
+boto3

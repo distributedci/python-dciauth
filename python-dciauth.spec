@@ -5,7 +5,7 @@
 %global summary DCI authentication module used by dci-control-server and python-dciclient
 
 Name:           python-%{srcname}
-Version:        4.0.0
+Version:        4.0.1
 Release:        1.VERS%{?dist}
 Summary:        %{summary}
 
@@ -68,6 +68,9 @@ BuildRequires:  python3-setuptools
 %{python3_sitelib}/%{srcname}/*
 
 %changelog
+* Tue Nov 05 2024 Guillaume Vincent <gvincent@redhat.com> 4.0.1-1
+- Fix query string to encode space character as "%20" (and not as "+")
+
 * Wed Oct 23 2024 Guillaume Vincent <gvincent@redhat.com> 4.0.0-1
 - Add a new implementation for generating headers and validating requests
 - v1 has been migrated to the new 
